@@ -14,32 +14,48 @@
         .excel-table td, .excel-table th { border: 1px solid #cbd5e1; }
         .time-label { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 900; margin-bottom: -2px; }
         .time-value { font-size: 1.25rem; font-weight: 900; line-height: 1; }
+        /* Badge för In/Ut/Fixa */
+        .badge-fixa { background-color: #f59e0b; color: white; }
+        .badge-in { background-color: #3b82f6; color: white; }
+        .badge-ut { background-color: #10b981; color: white; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen pb-48 font-sans text-slate-700">
 
     <div class="max-w-6xl mx-auto px-4 pt-6">
-        <h1 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">🚛 Draglista</h1>
+        <h1 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">🚛 LagerLogistik LIVE</h1>
 
         <div id="dailyView">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Trailer nr</label>
-                        <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-lg font-bold outline-none focus:border-blue-500">
+                        <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm">
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Port</label>
-                        <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-lg font-bold outline-none focus:border-blue-500">
+                        <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">In/Ut</label>
-                        <select id="typSelect" class="w-full border border-slate-300 p-3 rounded-lg bg-white font-bold outline-none">
-                            <option value="In">In</option>
-                            <option value="Ut">Ut</option>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Avdelning</label>
+                        <select id="deptSelect" class="w-full border border-slate-300 p-3 rounded-lg bg-white font-bold outline-none shadow-sm">
+                            <option value="Imp">Imp</option>
+                            <option value="Exp">Exp</option>
+                            <option value="Secu">Secu</option>
+                            <option value="Mattor">Mattor</option>
+                            <option value="Xylem">Xylem</option>
+                            <option value="Annat">Annat</option>
                         </select>
                     </div>
-                    <button id="addBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-lg shadow-lg active:scale-95 uppercase text-xs">+ Skapa rad</button>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Typ (In/Ut/Fixa)</label>
+                        <select id="typSelect" class="w-full border border-slate-300 p-3 rounded-lg bg-white font-bold outline-none shadow-sm">
+                            <option value="In">In</option>
+                            <option value="Ut">Ut</option>
+                            <option value="Fixa">Fixa</option>
+                        </select>
+                    </div>
+                    <button id="addBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-lg shadow-lg active:scale-95 uppercase text-xs tracking-widest">+ Skapa rad</button>
                 </div>
             </div>
 
@@ -54,7 +70,8 @@
                             <tr class="text-[10px] uppercase text-slate-400 font-bold">
                                 <th class="p-4 text-left">Trailer</th>
                                 <th class="p-4 text-left">Port/Typ</th>
-                                <th class="p-4 text-left w-1/3">Status/Notering</th>
+                                <th class="p-4 text-left">Avd</th>
+                                <th class="p-4 text-left w-1/4">Status/Notering</th>
                                 <th class="p-4 text-left">Begärt</th>
                                 <th class="p-4 text-center">Åtgärd</th>
                             </tr>
@@ -65,8 +82,9 @@
             </div>
 
             <div>
-                <div class="bg-slate-200 p-3 rounded-t-xl border-x border-t border-slate-300">
-                    <h2 class="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">✅ REDAN KLARA</h2>
+                <div class="bg-slate-200 p-3 rounded-t-xl border-x border-t border-slate-300 flex justify-between items-center">
+                    <h2 class="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">✅ REDAN KLARA (HISTORIK)</h2>
+                    <button onclick="clearHistory()" class="text-red-500 hover:text-white hover:bg-red-500 text-[10px] font-black uppercase border border-red-300 bg-red-50 px-4 py-1.5 rounded-lg transition-all shadow-sm">🗑️ Rensa historik</button>
                 </div>
                 <div id="doneList" class="space-y-3 bg-slate-50/50 p-4 rounded-b-xl border border-slate-300 min-h-[100px]"></div>
             </div>
@@ -89,11 +107,11 @@
     </div>
 
     <div class="fixed bottom-0 left-0 right-0 bg-slate-200 border-t border-slate-400 flex overflow-x-auto shadow-2xl z-50">
-        <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white">Måndag</button>
-        <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white">Tisdag</button>
-        <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white">Onsdag</button>
-        <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white">Torsdag</button>
-        <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white">Fredag</button>
+        <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Måndag</button>
+        <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Tisdag</button>
+        <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Onsdag</button>
+        <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Torsdag</button>
+        <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Fredag</button>
         <button onclick="switchTab('Veckoöversikt')" id="tab-Veckoöversikt" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-blue-600 bg-blue-50 border-l border-slate-300 ml-auto italic">📈 Översikt</button>
     </div>
 
@@ -101,6 +119,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
+        // Dina Firebase-uppgifter
         const firebaseConfig = {
             apiKey: "AIzaSyCmVuLp-T9f_XGMmUnWZREK2gi8vvsiYb4",
             authDomain: "lagerlogistik-87feb.firebaseapp.com",
@@ -120,7 +139,6 @@
         let allWeeks = {};
         window.currentDay = 'Måndag';
 
-        // --- SWITCH TAB ---
         window.switchTab = (tab) => {
             window.currentDay = tab;
             document.getElementById('dailyView').classList.toggle('hidden', tab === 'Veckoöversikt');
@@ -128,7 +146,6 @@
             renderAll();
         };
 
-        // --- TRAILERS ---
         document.getElementById('addBtn').onclick = () => {
             const nr = document.getElementById('trailerNr').value.trim();
             const port = document.getElementById('portNr').value.trim();
@@ -136,7 +153,9 @@
 
             const newTrailerRef = push(trailersRef);
             set(newTrailerRef, {
-                nr, port, typ: document.getElementById('typSelect').value,
+                nr, port, 
+                typ: document.getElementById('typSelect').value,
+                avd: document.getElementById('deptSelect').value,
                 dag: window.currentDay, status: "Normal", notering: "",
                 begart: new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}),
                 klar: false, timestamp: Date.now()
@@ -153,27 +172,23 @@
             let diff = (now.getHours() * 60 + now.getMinutes()) - (bH * 60 + bM);
             if (diff < 0) diff += 1440;
             const total = `${String(Math.floor(diff/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
-            
             update(ref(db, `trailers/${id}`), { klar: true, utford: utTime, total: total });
+        };
+
+        window.clearHistory = () => {
+            if (confirm(`Rensa ALLA klara uppdrag för ${window.currentDay}?`)) {
+                Object.keys(allTrailers).forEach(id => {
+                    if (allTrailers[id].dag === window.currentDay && allTrailers[id].klar) {
+                        remove(ref(db, `trailers/${id}`));
+                    }
+                });
+            }
         };
 
         window.setStatus = (id, stat) => update(ref(db, `trailers/${id}`), { status: stat });
         window.saveNotering = (id, val) => update(ref(db, `trailers/${id}`), { notering: val });
         window.revert = (id) => update(ref(db, `trailers/${id}`), { klar: false });
 
-        // --- WEEKS ---
-        document.getElementById('newWeekBtn').onclick = () => {
-            const newWeekRef = push(weeksRef);
-            set(newWeekRef, { name: "v.XX", mon:"", tue:"", wed:"", thu:"", fri:"" });
-        };
-
-        window.updateWeek = (id, field, val) => {
-            const updateObj = {}; updateObj[field] = val;
-            update(ref(db, `weeks/${id}`), updateObj);
-        };
-        window.deleteWeek = (id) => confirm("Radera rad?") && remove(ref(db, `weeks/${id}`));
-
-        // --- SYNC & RENDER ---
         onValue(trailersRef, (snapshot) => {
             allTrailers = snapshot.val() || {};
             renderAll();
@@ -189,7 +204,6 @@
             const doneList = document.getElementById('doneList');
             const excelBody = document.getElementById('excelGridBody');
             
-            // Tab styling
             document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('tab-active'));
             document.getElementById('tab-' + window.currentDay).classList.add('tab-active');
 
@@ -200,28 +214,24 @@
                     excelBody.innerHTML += `<tr>
                         <td class="p-0"><input type="text" value="${w.name}" onchange="updateWeek('${id}', 'name', this.value)"></td>
                         <td class="p-0"><input type="text" value="${w.mon}" onchange="updateWeek('${id}', 'mon', this.value)"></td>
-                        <td class="p-0"><input type="text" value="${w.tue}" onchange="updateWeek('${id}', 'tue', this.value)"></td>
-                        <td class="p-0"><input type="text" value="${w.wed}" onchange="updateWeek('${id}', 'wed', this.value)"></td>
-                        <td class="p-0"><input type="text" value="${w.thu}" onchange="updateWeek('${id}', 'thu', this.value)"></td>
-                        <td class="p-0"><input type="text" value="${w.fri}" onchange="updateWeek('${id}', 'fri', this.value)"></td>
-                        <td class="text-center"><button onclick="deleteWeek('${id}')" class="text-red-300">✕</button></td>
-                    </tr>`;
+                        </tr>`;
                 });
             } else {
                 activeTable.innerHTML = ""; doneList.innerHTML = "";
                 let count = 0;
-                
-                // Sortera efter tid
                 const sortedIds = Object.keys(allTrailers).sort((a,b) => allTrailers[b].timestamp - allTrailers[a].timestamp);
 
                 sortedIds.forEach(id => {
                     const t = allTrailers[id];
                     if (t.dag === window.currentDay) {
+                        const typBadge = t.typ === 'In' ? 'badge-in' : (t.typ === 'Ut' ? 'badge-ut' : 'badge-fixa');
+                        
                         if (!t.klar) {
                             count++;
                             activeTable.innerHTML += `<tr class="border-b ${t.status==='PRIO'?'row-prio':''} ${t.status==='Hittar ej'?'row-problem':''}">
                                 <td class="p-4 font-black text-3xl tracking-tighter">${t.nr}</td>
-                                <td class="p-4 font-bold text-slate-500 text-sm uppercase italic">Port ${t.port}<br><span class="text-blue-500">${t.typ}</span></td>
+                                <td class="p-4 font-bold text-slate-500 text-sm uppercase italic">Port ${t.port}<br><span class="px-2 py-0.5 rounded text-[10px] ${typBadge}">${t.typ}</span></td>
+                                <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-black uppercase text-slate-500 border border-slate-200">${t.avd || 'N/A'}</span></td>
                                 <td class="p-4">
                                     <select onchange="setStatus('${id}', this.value)" class="bg-white border p-2 rounded text-xs font-bold mb-1 w-full outline-none shadow-sm">
                                         <option ${t.status==='Normal'?'selected':''}>Normal</option>
@@ -238,14 +248,15 @@
                                 <div class="flex items-center gap-6">
                                     <div class="bg-excel-done px-6 py-2 rounded-lg text-2xl border border-green-300">${t.nr}</div>
                                     <div class="font-bold text-slate-400 uppercase italic leading-tight">
-                                        Port ${t.port} (${t.typ})<br><span class="text-slate-800 text-xs font-black not-italic">${t.notering||''}</span>
+                                        Port ${t.port} (<span class="text-slate-600">${t.typ}</span>) - <span class="text-blue-400 text-[10px]">${t.avd || ''}</span><br>
+                                        <span class="text-slate-800 text-xs font-black not-italic">${t.notering||''}</span>
                                     </div>
                                 </div>
                                 <div class="flex gap-10 items-center">
                                     <div class="text-center"><p class="time-label">Begärt</p><p class="time-value text-slate-400">${t.begart}</p></div>
                                     <div class="text-center"><p class="time-label">Utförd</p><p class="time-value text-green-600">${t.utford}</p></div>
                                     <div class="text-center border-l border-slate-200 pl-10"><p class="time-label">Total Tid</p><p class="time-value text-blue-600">${t.total}</p></div>
-                                    <button onclick="revert('${id}')" class="text-slate-300 hover:text-blue-500 ml-4">↺</button>
+                                    <button onclick="revert('${id}')" class="text-slate-300 hover:text-blue-500 ml-4 transition-all">↺</button>
                                 </div>
                             </div>`;
                         }
@@ -257,6 +268,4 @@
         }
     </script>
 </body>
-
 </html>
-
