@@ -2,128 +2,137 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tugglista </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LagerLogistik Pro - Noteringar Fixade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-excel-done { background-color: #00ff00 !important; color: black !important; font-weight: 900; }
         .row-prio { background-color: #fef08a !important; border-left: 8px solid #facc15; } 
         .row-problem { background-color: #fee2e2 !important; border-left: 8px solid #f87171; }
+        .row-error-done { background-color: #fecaca !important; border: 2px solid #ef4444 !important; }
         .tab-active { background-color: white !important; border-top: 4px solid #3b82f6 !important; color: #1e40af !important; font-weight: 900 !important; }
-        .excel-table input { width: 100%; height: 100%; border: none; outline: none; padding: 12px; background: transparent; text-align: center; font-weight: bold; }
-        .excel-table td, .excel-table th { border: 1px solid #cbd5e1; }
-        .time-label { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 900; margin-bottom: -2px; }
-        .time-value { font-size: 1.25rem; font-weight: 900; line-height: 1; }
-        /* Badge för In/Ut/Fixa */
-        .badge-fixa { background-color: #f59e0b; color: white; }
-        .badge-in { background-color: #3b82f6; color: white; }
-        .badge-ut { background-color: #10b981; color: white; }
+        
+        .badge-fixa { background-color: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
+        .badge-in { background-color: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
+        .badge-ut { background-color: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
+
+        .excel-table td, .excel-table th { border: 1px solid #cbd5e1; padding: 8px; text-align: center; }
+        .excel-table input { width: 100%; border: none; outline: none; background: transparent; font-weight: bold; text-align: center; }
+
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1e293b; z-index: 9999; display: flex;
+            align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen pb-48 font-sans text-slate-700">
 
-    <div class="max-w-6xl mx-auto px-4 pt-6">
-        <h1 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">🚛 Tugg Lista</h1>
+    <div id="loginOverlay">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl w-96 text-center border-t-8 border-blue-600">
+            <h2 class="text-2xl font-black mb-6 italic uppercase tracking-tighter text-slate-800">🚛 LagerLogistik</h2>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">Ange Behörighetskod</p>
+            <input id="passInput" type="password" class="w-full border-2 p-4 rounded-xl mb-4 text-center text-xl font-bold outline-none border-slate-200 focus:border-blue-500 transition-all">
+            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg hover:bg-blue-700 transition-all">Logga in</button>
+        </div>
+    </div>
 
-        <div id="dailyView">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Trailer nr</label>
-                        <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm">
+    <div id="mainContent" class="hidden transition-opacity duration-500">
+        <div class="max-w-6xl mx-auto px-4 pt-8">
+            <h1 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-2">🚛 LagerLogistik LIVE</h1>
+
+            <div id="dailyView">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-10">
+                    <div class="grid grid-cols-5 gap-6 items-end">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Trailer nr</label>
+                            <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold shadow-sm outline-none focus:border-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Port</label>
+                            <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold shadow-sm outline-none focus:border-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Avdelning</label>
+                            <select id="deptSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold shadow-sm bg-white outline-none">
+                                <option>Imp</option><option>Exp</option><option>Secu</option><option>Mattor</option><option>Xylem</option><option>Annat</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Typ</label>
+                            <select id="typSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold shadow-sm bg-white outline-none">
+                                <option>In</option><option>Ut</option><option>Fixa</option>
+                            </select>
+                        </div>
+                        <button id="addBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-xl uppercase text-xs tracking-tighter hover:bg-blue-700 active:scale-95 transition-all">+ SKAPA RAD</button>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Port</label>
-                        <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-lg font-bold outline-none focus:border-blue-500 shadow-sm">
+                </div>
+
+                <div class="mb-14">
+                    <div class="bg-[#1e293b] p-4 rounded-t-2xl flex justify-between items-center shadow-lg">
+                        <h2 class="text-white text-xs font-black uppercase tracking-widest italic flex items-center gap-2">⚠️ SKA GÖRAS NU - <span id="currentTabLabel">Måndag</span></h2>
+                        <span id="activeCount" class="bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black">0 st</span>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Avdelning</label>
-                        <select id="deptSelect" class="w-full border border-slate-300 p-3 rounded-lg bg-white font-bold outline-none shadow-sm">
-                            <option value="Imp">Imp</option>
-                            <option value="Exp">Exp</option>
-                            <option value="Secu">Secu</option>
-                            <option value="Mattor">Mattor</option>
-                            <option value="Xylem">Xylem</option>
-                            <option value="Annat">Annat</option>
-                        </select>
+                    <div class="bg-white rounded-b-2xl shadow-2xl overflow-hidden border border-slate-300">
+                        <table class="w-full border-collapse">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase text-slate-400 font-bold">
+                                <tr>
+                                    <th class="p-5 text-left">Trailer</th>
+                                    <th class="p-5 text-left">Port/Typ</th>
+                                    <th class="p-5 text-left">Avd</th>
+                                    <th class="p-5 text-left w-1/4">Status/Notering</th>
+                                    <th class="p-5 text-left">Begärt</th>
+                                    <th class="p-5 text-center">Åtgärd</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activeTable"></tbody>
+                        </table>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Typ (In/Ut/Fixa)</label>
-                        <select id="typSelect" class="w-full border border-slate-300 p-3 rounded-lg bg-white font-bold outline-none shadow-sm">
-                            <option value="In">In</option>
-                            <option value="Ut">Ut</option>
-                            <option value="Fixa">Fixa</option>
-                        </select>
+                </div>
+
+                <div>
+                    <div class="bg-slate-200/50 p-4 rounded-t-2xl flex justify-between items-center border border-slate-300">
+                        <h2 class="text-slate-500 text-[10px] font-black uppercase italic tracking-widest">✅ REDAN KLARA (<span id="doneCount">0</span> ST UTFÖRDA)</h2>
+                        <button onclick="clearHistory()" class="text-red-500 bg-red-50 px-4 py-2 rounded-lg text-[9px] font-black uppercase border border-red-300 hover:bg-red-500 hover:text-white transition-all">🗑️ Rensa Historik</button>
                     </div>
-                    <button id="addBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-lg shadow-lg active:scale-95 uppercase text-xs tracking-widest">+ Skapa rad</button>
+                    <div id="doneList" class="space-y-4 bg-slate-50/50 p-6 rounded-b-2xl border-x border-b border-slate-300 min-h-[100px]"></div>
                 </div>
             </div>
 
-            <div class="mb-12">
-                <div class="bg-[#1e293b] p-4 rounded-t-xl flex justify-between items-center shadow-lg">
-                    <h2 class="text-white text-xs font-black uppercase tracking-widest italic">⚠️ SKA GÖRAS NU - <span id="currentTabLabel">Måndag</span></h2>
-                    <span id="activeCount" class="bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black">0 st</span>
-                </div>
-                <div class="bg-white rounded-b-xl shadow-xl overflow-hidden border-x border-b border-slate-300">
-                    <table class="w-full border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-200">
-                            <tr class="text-[10px] uppercase text-slate-400 font-bold">
-                                <th class="p-4 text-left">Trailer</th>
-                                <th class="p-4 text-left">Port/Typ</th>
-                                <th class="p-4 text-left">Avd</th>
-                                <th class="p-4 text-left w-1/4">Status/Notering</th>
-                                <th class="p-4 text-left">Begärt</th>
-                                <th class="p-4 text-center">Åtgärd</th>
-                            </tr>
+            <div id="statsView" class="hidden">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between mb-6 items-center border-b pb-4">
+                        <h2 class="text-xl font-black uppercase italic text-blue-600 tracking-tighter italic">📈 Veckoöversikt & Statistik</h2>
+                        <button onclick="addNewWeekRow()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase shadow-md hover:bg-blue-700 transition-all">+ Ny vecka</button>
+                    </div>
+                    <table class="w-full excel-table">
+                        <thead class="bg-slate-100 text-[10px] font-black uppercase text-slate-500">
+                            <tr><th>Vecka</th><th>Mån</th><th>Tis</th><th>Ons</th><th>Tor</th><th>Fre</th><th class="bg-blue-50">Totalt</th><th class="text-red-400">Radera</th></tr>
                         </thead>
-                        <tbody id="activeTable"></tbody>
+                        <tbody id="weekBody"></tbody>
                     </table>
                 </div>
             </div>
-
-            <div>
-                <div class="bg-slate-200 p-3 rounded-t-xl border-x border-t border-slate-300 flex justify-between items-center">
-                    <h2 class="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">✅ REDAN KLARA (HISTORIK)</h2>
-                    <button onclick="clearHistory()" class="text-red-500 hover:text-white hover:bg-red-500 text-[10px] font-black uppercase border border-red-300 bg-red-50 px-4 py-1.5 rounded-lg transition-all shadow-sm">🗑️ Rensa historik</button>
-                </div>
-                <div id="doneList" class="space-y-3 bg-slate-50/50 p-4 rounded-b-xl border border-slate-300 min-h-[100px]"></div>
-            </div>
         </div>
 
-        <div id="statsView" class="hidden">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-                <div class="flex justify-between items-center mb-6 text-blue-600 font-black uppercase text-xs">
-                    <span>Veckoöversikt</span>
-                    <button id="newWeekBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">+ Ny vecka</button>
-                </div>
-                <table class="w-full excel-table text-sm border-collapse">
-                    <thead class="bg-slate-100 font-black">
-                        <tr><th>Vecka</th><th>Mån</th><th>Tis</th><th>Ons</th><th>Tors</th><th>Fre</th><th></th></tr>
-                    </thead>
-                    <tbody id="excelGridBody"></tbody>
-                </table>
-            </div>
+        <div class="fixed bottom-24 left-0 right-0 text-center pointer-events-none opacity-40">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">From Viktor with ❤️</p>
         </div>
-    </div>
-<div class="fixed bottom-16 left-0 right-0 text-center pointer-events-none z-40">
-    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-60">
-        From Viktor with ❤️
-    </p>
-</div>
-    <div class="fixed bottom-0 left-0 right-0 bg-slate-200 border-t border-slate-400 flex overflow-x-auto shadow-2xl z-50">
-        <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Måndag</button>
-        <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Tisdag</button>
-        <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Onsdag</button>
-        <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Torsdag</button>
-        <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Fredag</button>
-        <button onclick="switchTab('Veckoöversikt')" id="tab-Veckoöversikt" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-blue-600 bg-blue-50 border-l border-slate-300 ml-auto italic">📈 Översikt</button>
+
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 flex overflow-x-auto shadow-2xl z-50">
+            <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500 hover:bg-slate-50 transition-all">Mån</button>
+            <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500 hover:bg-slate-50 transition-all">Tis</button>
+            <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500 hover:bg-slate-50 transition-all">Ons</button>
+            <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500 hover:bg-slate-50 transition-all">Tor</button>
+            <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500 hover:bg-slate-50 transition-all">Fre</button>
+            <button onclick="switchTab('Översikt')" id="tab-Översikt" class="nav-tab flex-1 py-5 font-black text-[11px] uppercase text-blue-600 bg-blue-50 border-l border-slate-200 italic shadow-inner">📊 Översikt</button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-        // Dina Firebase-uppgifter
         const firebaseConfig = {
             apiKey: "AIzaSyCmVuLp-T9f_XGMmUnWZREK2gi8vvsiYb4",
             authDomain: "lagerlogistik-87feb.firebaseapp.com",
@@ -138,15 +147,23 @@
         const db = getDatabase(app);
         const trailersRef = ref(db, 'trailers');
         const weeksRef = ref(db, 'weeks');
-
         let allTrailers = {};
         let allWeeks = {};
         window.currentDay = 'Måndag';
 
+        window.checkLogin = () => {
+            if(document.getElementById('passInput').value === "Logistik2024") {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            } else {
+                alert("Fel lösenord!");
+            }
+        };
+
         window.switchTab = (tab) => {
             window.currentDay = tab;
-            document.getElementById('dailyView').classList.toggle('hidden', tab === 'Veckoöversikt');
-            document.getElementById('statsView').classList.toggle('hidden', tab !== 'Veckoöversikt');
+            document.getElementById('dailyView').classList.toggle('hidden', tab === 'Översikt');
+            document.getElementById('statsView').classList.toggle('hidden', tab !== 'Översikt');
             renderAll();
         };
 
@@ -154,18 +171,14 @@
             const nr = document.getElementById('trailerNr').value.trim();
             const port = document.getElementById('portNr').value.trim();
             if (!nr) return;
-
-            const newTrailerRef = push(trailersRef);
-            set(newTrailerRef, {
-                nr, port, 
-                typ: document.getElementById('typSelect').value,
+            push(trailersRef, {
+                nr, port, typ: document.getElementById('typSelect').value,
                 avd: document.getElementById('deptSelect').value,
                 dag: window.currentDay, status: "Normal", notering: "",
                 begart: new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}),
-                klar: false, timestamp: Date.now()
+                klar: false, error: false, timestamp: Date.now()
             });
-            document.getElementById('trailerNr').value = "";
-            document.getElementById('portNr').value = "";
+            document.getElementById('trailerNr').value = ""; document.getElementById('portNr').value = "";
         };
 
         window.markDone = (id) => {
@@ -175,106 +188,103 @@
             const [bH, bM] = t.begart.split(':').map(Number);
             let diff = (now.getHours() * 60 + now.getMinutes()) - (bH * 60 + bM);
             if (diff < 0) diff += 1440;
-            const total = `${String(Math.floor(diff/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
+            const total = `${Math.floor(diff/60)}h ${diff%60}m`;
             update(ref(db, `trailers/${id}`), { klar: true, utford: utTime, total: total });
         };
 
-        window.clearHistory = () => {
-            if (confirm(`Rensa ALLA klara uppdrag för ${window.currentDay}?`)) {
-                Object.keys(allTrailers).forEach(id => {
-                    if (allTrailers[id].dag === window.currentDay && allTrailers[id].klar) {
-                        remove(ref(db, `trailers/${id}`));
-                    }
-                });
-            }
-        };
-
-        window.setStatus = (id, stat) => update(ref(db, `trailers/${id}`), { status: stat });
-        window.saveNotering = (id, val) => update(ref(db, `trailers/${id}`), { notering: val });
-        window.revert = (id) => update(ref(db, `trailers/${id}`), { klar: false });
-
-        onValue(trailersRef, (snapshot) => {
-            allTrailers = snapshot.val() || {};
-            renderAll();
+        window.toggleError = (id, currentVal) => update(ref(db, `trailers/${id}`), { error: !currentVal });
+        window.deleteTrailer = (id) => confirm("Radera helt?") && remove(ref(db, `trailers/${id}`));
+        window.clearHistory = () => confirm("Rensa dagens historik?") && Object.keys(allTrailers).forEach(id => {
+            if (allTrailers[id].dag === window.currentDay && allTrailers[id].klar) remove(ref(db, `trailers/${id}`));
         });
 
-        onValue(weeksRef, (snapshot) => {
-            allWeeks = snapshot.val() || {};
-            renderAll();
-        });
+        window.addNewWeekRow = () => push(weeksRef, { v: "V.00", mon: 0, tue: 0, wed: 0, thu: 0, fri: 0 });
+        window.updateWeek = (id, field, val) => update(ref(db, `weeks/${id}`), { [field]: val });
+        window.deleteWeek = (id) => confirm("Radera rad?") && remove(ref(db, `weeks/${id}`));
+
+        onValue(trailersRef, (snapshot) => { allTrailers = snapshot.val() || {}; renderAll(); });
+        onValue(weeksRef, (snapshot) => { allWeeks = snapshot.val() || {}; renderAll(); });
 
         function renderAll() {
             const activeTable = document.getElementById('activeTable');
             const doneList = document.getElementById('doneList');
-            const excelBody = document.getElementById('excelGridBody');
+            const weekBody = document.getElementById('weekBody');
             
             document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('tab-active'));
-            document.getElementById('tab-' + window.currentDay).classList.add('tab-active');
+            const activeTab = document.getElementById('tab-' + window.currentDay);
+            if(activeTab) activeTab.classList.add('tab-active');
 
-            if (window.currentDay === 'Veckoöversikt') {
-                excelBody.innerHTML = "";
-                Object.keys(allWeeks).forEach(id => {
-                    const w = allWeeks[id];
-                    excelBody.innerHTML += `<tr>
-                        <td class="p-0"><input type="text" value="${w.name}" onchange="updateWeek('${id}', 'name', this.value)"></td>
-                        <td class="p-0"><input type="text" value="${w.mon}" onchange="updateWeek('${id}', 'mon', this.value)"></td>
+            activeTable.innerHTML = ""; doneList.innerHTML = ""; weekBody.innerHTML = "";
+            let aCount = 0, dCount = 0;
+
+            const sortedIds = Object.keys(allTrailers).sort((a,b) => allTrailers[b].timestamp - allTrailers[a].timestamp);
+            sortedIds.forEach(id => {
+                const t = allTrailers[id];
+                if (t.dag === window.currentDay) {
+                    if (!t.klar) {
+                        aCount++;
+                        activeTable.innerHTML += `
+                        <tr class="border-b ${t.status==='PRIO'?'row-prio':''} ${t.status==='Hittar ej'?'row-problem':''}">
+                            <td class="p-5 font-black text-4xl tracking-tighter">${t.nr}</td>
+                            <td class="p-5 font-bold text-slate-500 uppercase italic leading-tight text-sm">Port ${t.port}<br><span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'}">${t.typ}</span></td>
+                            <td class="p-5"><span class="bg-slate-100 px-3 py-1 rounded text-[10px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">${t.avd}</span></td>
+                            <td class="p-5">
+                                <select onchange="update(ref(db, 'trailers/${id}'), {status: this.value})" class="bg-white border-2 p-2 rounded-lg text-xs font-black w-full mb-2 outline-none">
+                                    <option ${t.status==='Normal'?'selected':''}>Normal</option>
+                                    <option ${t.status==='PRIO'?'selected':''}>PRIO</option>
+                                    <option ${t.status==='Hittar ej'?'selected':''}>Hittar ej</option>
+                                </select>
+                                <input type="text" value="${t.notering||''}" onblur="update(ref(db, 'trailers/${id}'), {notering: this.value})" placeholder="Skriv notering..." class="w-full text-xs italic font-bold border-b-2 border-slate-100 py-1 outline-none focus:border-blue-300 transition-all">
+                            </td>
+                            <td class="p-5 font-black text-slate-400 text-2xl tracking-tighter italic">${t.begart}</td>
+                            <td class="p-5 flex items-center justify-center gap-6">
+                                <button onclick="markDone('${id}')" class="bg-green-600 text-white font-black px-12 py-5 rounded-2xl shadow-xl uppercase text-xs hover:bg-green-700 active:scale-95 transition-all">KLAR</button>
+                                <button onclick="deleteTrailer('${id}')" class="text-slate-200 hover:text-red-500 font-bold transition-all">✕</button>
+                            </td>
                         </tr>`;
-                });
-            } else {
-                activeTable.innerHTML = ""; doneList.innerHTML = "";
-                let count = 0;
-                const sortedIds = Object.keys(allTrailers).sort((a,b) => allTrailers[b].timestamp - allTrailers[a].timestamp);
-
-                sortedIds.forEach(id => {
-                    const t = allTrailers[id];
-                    if (t.dag === window.currentDay) {
-                        const typBadge = t.typ === 'In' ? 'badge-in' : (t.typ === 'Ut' ? 'badge-ut' : 'badge-fixa');
-                        
-                        if (!t.klar) {
-                            count++;
-                            activeTable.innerHTML += `<tr class="border-b ${t.status==='PRIO'?'row-prio':''} ${t.status==='Problem'?'row-problem':''}">
-                                <td class="p-4 font-black text-3xl tracking-tighter">${t.nr}</td>
-                                <td class="p-4 font-bold text-slate-500 text-sm uppercase italic">Port ${t.port}<br><span class="px-2 py-0.5 rounded text-[10px] ${typBadge}">${t.typ}</span></td>
-                                <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-black uppercase text-slate-500 border border-slate-200">${t.avd || 'N/A'}</span></td>
-                                <td class="p-4">
-                                    <select onchange="setStatus('${id}', this.value)" class="bg-white border p-2 rounded text-xs font-bold mb-1 w-full outline-none shadow-sm">
-                                        <option ${t.status==='Normal'?'selected':''}>Normal</option>
-                                        <option ${t.status==='PRIO'?'selected':''}>PRIO</option>
-                                        <option ${t.status==='Problem'?'selected':''}>Problem</option>
-                                    </select>
-                                    <input type="text" placeholder="..." value="${t.notering||''}" onblur="saveNotering('${id}', this.value)" class="w-full bg-transparent border-b border-slate-300 text-xs py-1 outline-none italic">
-                                </td>
-                                <td class="p-4 font-black text-slate-400 text-lg">${t.begart}</td>
-                                <td class="p-4 text-center"><button onclick="markDone('${id}')" class="bg-green-600 text-white font-black px-10 py-4 rounded-xl shadow-lg uppercase text-xs">KLAR</button></td>
-                            </tr>`;
-                        } else {
-                            doneList.innerHTML += `<div class="flex justify-between items-center p-4 bg-white border border-slate-300 rounded-xl shadow-sm">
-                                <div class="flex items-center gap-6">
-                                    <div class="bg-excel-done px-6 py-2 rounded-lg text-2xl border border-green-300">${t.nr}</div>
-                                    <div class="font-bold text-slate-400 uppercase italic leading-tight">
-                                        Port ${t.port} (<span class="text-slate-600">${t.typ}</span>) - <span class="text-blue-400 text-[10px]">${t.avd || ''}</span><br>
-                                        <span class="text-slate-800 text-xs font-black not-italic">${t.notering||''}</span>
-                                    </div>
+                    } else {
+                        dCount++;
+                        doneList.innerHTML += `
+                        <div class="flex justify-between items-center p-5 bg-white border border-slate-300 rounded-2xl shadow-sm hover:shadow-md transition-all ${t.error?'row-error-done':''}">
+                            <div class="flex items-center gap-10">
+                                <div class="bg-excel-done px-8 py-3 rounded-xl text-3xl border-2 border-green-300 shadow-inner">${t.nr}</div>
+                                <div class="font-bold text-slate-400 uppercase italic leading-tight text-sm">
+                                    PORT ${t.port} (${t.typ}) - <span class="text-blue-500 font-black">${t.avd}</span><br>
+                                    <span class="text-slate-800 text-base font-black not-italic block mt-1">${t.notering ? '📝 ' + t.notering : ''}</span>
                                 </div>
-                                <div class="flex gap-10 items-center">
-                                    <div class="text-center"><p class="time-label">Begärt</p><p class="time-value text-slate-400">${t.begart}</p></div>
-                                    <div class="text-center"><p class="time-label">Utförd</p><p class="time-value text-green-600">${t.utford}</p></div>
-                                    <div class="text-center border-l border-slate-200 pl-10"><p class="time-label">Total Tid</p><p class="time-value text-blue-600">${t.total}</p></div>
-                                    <button onclick="revert('${id}')" class="text-slate-300 hover:text-blue-500 ml-4 transition-all">↺</button>
+                            </div>
+                            <div class="flex gap-14 items-center">
+                                <div class="text-center font-bold px-8 border-l border-slate-100"><p class="text-[9px] text-slate-400 uppercase tracking-widest mb-1">Total Tid</p><p class="text-xl text-blue-600 font-black italic tracking-tighter">${t.total}</p></div>
+                                <div class="flex items-center gap-4 border-l border-slate-100 pl-8">
+                                    <button onclick="toggleError('${id}', ${t.error})" class="text-2xl transition-transform hover:scale-125 ${t.error?'text-red-600':'text-slate-200'}">⚠️</button>
+                                    <button onclick="update(ref(db, 'trailers/${id}'), {klar: false})" class="text-slate-300 hover:text-blue-500 transition-all">↺</button>
                                 </div>
-                            </div>`;
-                        }
+                            </div>
+                        </div>`;
                     }
-                });
-                document.getElementById('activeCount').innerText = count + " st";
-                document.getElementById('currentTabLabel').innerText = window.currentDay;
-            }
+                }
+            });
+
+            Object.keys(allWeeks).forEach(id => {
+                const w = allWeeks[id];
+                const total = (Number(w.mon)||0) + (Number(w.tue)||0) + (Number(w.wed)||0) + (Number(w.thu)||0) + (Number(w.fri)||0);
+                weekBody.innerHTML += `
+                <tr>
+                    <td class="font-black"><input value="${w.v}" onchange="updateWeek('${id}', 'v', this.value)" class="text-blue-600"></td>
+                    <td><input type="number" value="${w.mon}" onchange="updateWeek('${id}', 'mon', this.value)"></td>
+                    <td><input type="number" value="${w.tue}" onchange="updateWeek('${id}', 'tue', this.value)"></td>
+                    <td><input type="number" value="${w.wed}" onchange="updateWeek('${id}', 'wed', this.value)"></td>
+                    <td><input type="number" value="${w.thu}" onchange="updateWeek('${id}', 'thu', this.value)"></td>
+                    <td><input type="number" value="${w.fri}" onchange="updateWeek('${id}', 'fri', this.value)"></td>
+                    <td class="font-black text-blue-600 bg-blue-50/50">${total}</td>
+                    <td><button onclick="deleteWeek('${id}')" class="text-red-300 hover:text-red-600 transition-all font-bold">✕</button></td>
+                </tr>`;
+            });
+
+            document.getElementById('activeCount').innerText = aCount + " st";
+            document.getElementById('doneCount').innerText = dCount;
+            document.getElementById('currentTabLabel').innerText = window.currentDay;
         }
     </script>
 </body>
 </html>
-
-
-
-
-
