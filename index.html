@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LagerLogistik Pro - Fixed</title>
+    <title>LagerLogistik Pro - Stabil</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-excel-done { background-color: #00ff00 !important; color: black !important; font-weight: 900; }
@@ -170,6 +170,10 @@
         };
 
         window.markDone = (id) => {
+            // Läs av noteringen direkt från inputfältet precis innan vi stänger raden
+            const noteInput = document.getElementById(`note-${id}`);
+            const finalNote = noteInput ? noteInput.value : (allTrailers[id].notering || "");
+
             const t = allTrailers[id];
             const now = new Date();
             const utTime = now.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'});
@@ -177,7 +181,13 @@
             let diff = (now.getHours() * 60 + now.getMinutes()) - (bH * 60 + bM);
             if (diff < 0) diff += 1440;
             const total = `${Math.floor(diff/60)}h ${diff%60}m`;
-            update(ref(db, `trailers/${id}`), { klar: true, utford: utTime, total: total });
+            
+            update(ref(db, `trailers/${id}`), { 
+                klar: true, 
+                utford: utTime, 
+                total: total,
+                notering: finalNote 
+            });
         };
 
         window.updateVal = (id, field, val) => update(ref(db, `trailers/${id}`), { [field]: val });
@@ -192,6 +202,7 @@
         onValue(trailersRef, (snapshot) => { allTrailers = snapshot.val() || {}; renderAll(); });
         onValue(weeksRef, (snapshot) => { 
             const weekBody = document.getElementById('weekBody');
+            if(!weekBody) return;
             weekBody.innerHTML = "";
             const weeks = snapshot.val() || {};
             Object.keys(weeks).forEach(id => {
@@ -212,6 +223,8 @@
         function renderAll() {
             const activeTable = document.getElementById('activeTable');
             const doneList = document.getElementById('doneList');
+            if(!activeTable || !doneList) return;
+
             document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('tab-active'));
             document.getElementById('tab-' + window.currentDay).classList.add('tab-active');
 
@@ -237,7 +250,7 @@
                                 <option ${t.status==='PRIO'?'selected':''}>PRIO</option>
                                 <option ${t.status==='Hittar ej'?'selected':''}>Hittar ej</option>
                             </select>
-                            <input type="text" value="${t.notering||''}" oninput="updateVal('${id}', 'notering', this.value)" placeholder="Skriv notering..." class="w-full text-xs italic font-bold border-b-2 py-1 outline-none">
+                            <input id="note-${id}" type="text" value="${t.notering||''}" onblur="updateVal('${id}', 'notering', this.value)" placeholder="Skriv notering..." class="w-full text-xs italic font-bold border-b-2 py-1 outline-none">
                         </td>
                         <td class="p-5 font-black text-slate-400 text-2xl tracking-tighter italic">${t.begart}</td>
                         <td class="p-5 flex items-center justify-center gap-6">
