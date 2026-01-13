@@ -23,7 +23,7 @@
 <body class="bg-slate-100 min-h-screen pb-48 font-sans text-slate-700">
 
     <div class="max-w-6xl mx-auto px-4 pt-6">
-        <h1 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">🚛 LagerLogistik LIVE</h1>
+        <h1 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">🚛 Tugg Lista</h1>
 
         <div id="dailyView">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
@@ -105,7 +105,7 @@
             </div>
         </div>
     </div>
-
+<h1 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">From Viktor with ❤️</h1>
     <div class="fixed bottom-0 left-0 right-0 bg-slate-200 border-t border-slate-400 flex overflow-x-auto shadow-2xl z-50">
         <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Måndag</button>
         <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab px-8 py-4 font-bold text-xs uppercase text-slate-500 border-r border-slate-300 hover:bg-white transition-all">Tisdag</button>
@@ -228,7 +228,7 @@
                         
                         if (!t.klar) {
                             count++;
-                            activeTable.innerHTML += `<tr class="border-b ${t.status==='PRIO'?'row-prio':''} ${t.status==='Hittar ej'?'row-problem':''}">
+                            activeTable.innerHTML += `<tr class="border-b ${t.status==='PRIO'?'row-prio':''} ${t.status==='Problem'?'row-problem':''}">
                                 <td class="p-4 font-black text-3xl tracking-tighter">${t.nr}</td>
                                 <td class="p-4 font-bold text-slate-500 text-sm uppercase italic">Port ${t.port}<br><span class="px-2 py-0.5 rounded text-[10px] ${typBadge}">${t.typ}</span></td>
                                 <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-black uppercase text-slate-500 border border-slate-200">${t.avd || 'N/A'}</span></td>
@@ -236,7 +236,7 @@
                                     <select onchange="setStatus('${id}', this.value)" class="bg-white border p-2 rounded text-xs font-bold mb-1 w-full outline-none shadow-sm">
                                         <option ${t.status==='Normal'?'selected':''}>Normal</option>
                                         <option ${t.status==='PRIO'?'selected':''}>PRIO</option>
-                                        <option ${t.status==='Hittar ej'?'selected':''}>Hittar ej</option>
+                                        <option ${t.status==='Problem'?'selected':''}>Problem</option>
                                     </select>
                                     <input type="text" placeholder="..." value="${t.notering||''}" onblur="saveNotering('${id}', this.value)" class="w-full bg-transparent border-b border-slate-300 text-xs py-1 outline-none italic">
                                 </td>
@@ -269,3 +269,4 @@
     </script>
 </body>
 </html>
+
