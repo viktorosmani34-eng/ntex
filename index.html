@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LagerLogistik Pro - Session Edition</title>
+    <title>TUG Lista</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-excel-done { background-color: #00ff00 !important; color: black !important; font-weight: 900; }
@@ -29,7 +29,7 @@
 
     <div id="loginOverlay">
         <div class="bg-white p-10 rounded-2xl shadow-2xl w-96 text-center border-t-8 border-blue-600">
-            <h2 class="text-2xl font-black mb-6 uppercase tracking-tighter text-slate-800 italic">🚛 Lager Logistik</h2>
+            <h2 class="text-2xl font-black mb-6 uppercase tracking-tighter text-slate-800 italic">🚛 Tug Lista</h2>
             <input id="passInput" type="password" placeholder="Lösenord" class="w-full border-2 p-4 rounded-xl mb-4 text-center text-xl font-bold outline-none border-slate-200 focus:border-blue-500">
             <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg hover:bg-blue-700">Logga in</button>
             <p id="errorMsg" class="text-red-500 text-xs mt-4 font-bold hidden">FEL LÖSENORD!</p>
@@ -39,7 +39,7 @@
     <div id="mainContent" class="hidden">
         <div class="max-w-6xl mx-auto px-4 pt-8">
             <div class="flex justify-between items-center mb-8">
-                <h1 class="text-2xl font-black text-slate-800 flex items-center gap-2">🚛 LagerLogistik LIVE</h1>
+                <h1 class="text-2xl font-black text-slate-800 flex items-center gap-2">🚛 Tug Lista</h1>
                 <button onclick="logout()" class="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest">Logga ut</button>
             </div>
 
@@ -146,7 +146,7 @@
         window.currentDay = 'Måndag';
 
         // --- INLOGGNINGSLOGIK MED 1 TIMMES TIMEOUT ---
-        const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 timme i millisekunder
+        const SESSION_TIMEOUT = 60 * 60 * 1000; //
 
         window.checkLogin = () => {
             const pass = document.getElementById('passInput').value;
@@ -308,3 +308,4 @@
     </script>
 </body>
 </html>
+
