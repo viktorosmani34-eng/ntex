@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LagerLogistik Pro - Stabil</title>
+    <title>LagerLogistik Pro - Session Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-excel-done { background-color: #00ff00 !important; color: black !important; font-weight: 900; }
@@ -32,37 +32,41 @@
             <h2 class="text-2xl font-black mb-6 uppercase tracking-tighter text-slate-800 italic">🚛 Lager Logistik</h2>
             <input id="passInput" type="password" placeholder="Lösenord" class="w-full border-2 p-4 rounded-xl mb-4 text-center text-xl font-bold outline-none border-slate-200 focus:border-blue-500">
             <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg hover:bg-blue-700">Logga in</button>
+            <p id="errorMsg" class="text-red-500 text-xs mt-4 font-bold hidden">FEL LÖSENORD!</p>
         </div>
     </div>
 
     <div id="mainContent" class="hidden">
         <div class="max-w-6xl mx-auto px-4 pt-8">
-            <h1 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-2">🚛 LagerLogistik LIVE</h1>
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl font-black text-slate-800 flex items-center gap-2">🚛 LagerLogistik LIVE</h1>
+                <button onclick="logout()" class="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest">Logga ut</button>
+            </div>
 
             <div id="dailyView">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-10">
                     <div class="grid grid-cols-5 gap-6 items-end">
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Trailer nr</label>
-                            <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500">
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Trailer nr</label>
+                            <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500 transition-all">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Port</label>
-                            <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500">
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Port</label>
+                            <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500 transition-all">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Avdelning</label>
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Avdelning</label>
                             <select id="deptSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold bg-white">
                                 <option>Imp</option><option>Exp</option><option>Secu</option><option>Mattor</option><option>Xylem</option><option>Annat</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Typ</label>
+                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Typ</label>
                             <select id="typSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold bg-white">
                                 <option>In</option><option>Ut</option><option>Fixa</option>
                             </select>
                         </div>
-                        <button id="addBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-xl uppercase text-xs">Skapa rad</button>
+                        <button id="addBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-xl uppercase text-xs active:scale-95 transition-all">Skapa rad</button>
                     </div>
                 </div>
 
@@ -141,12 +145,37 @@
         let allTrailers = {};
         window.currentDay = 'Måndag';
 
+        // --- INLOGGNINGSLOGIK MED 1 TIMMES TIMEOUT ---
+        const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 timme i millisekunder
+
         window.checkLogin = () => {
-            if(document.getElementById('passInput').value === "Logistik2024") {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
+            const pass = document.getElementById('passInput').value;
+            if(pass === "Logistik2024") {
+                const now = Date.now();
+                localStorage.setItem('logistikLoginTime', now);
+                showApp();
+            } else {
+                document.getElementById('errorMsg').classList.remove('hidden');
             }
         };
+
+        function showApp() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        window.logout = () => {
+            localStorage.removeItem('logistikLoginTime');
+            location.reload();
+        };
+
+        // Kolla vid uppstart
+        const lastLogin = localStorage.getItem('logistikLoginTime');
+        if (lastLogin && (Date.now() - lastLogin < SESSION_TIMEOUT)) {
+            showApp();
+        }
+
+        // --- RESTEN AV FUNKTIONERNA ---
 
         window.switchTab = (tab) => {
             window.currentDay = tab;
@@ -170,10 +199,8 @@
         };
 
         window.markDone = (id) => {
-            // Läs av noteringen direkt från inputfältet precis innan vi stänger raden
             const noteInput = document.getElementById(`note-${id}`);
             const finalNote = noteInput ? noteInput.value : (allTrailers[id].notering || "");
-
             const t = allTrailers[id];
             const now = new Date();
             const utTime = now.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'});
@@ -181,13 +208,7 @@
             let diff = (now.getHours() * 60 + now.getMinutes()) - (bH * 60 + bM);
             if (diff < 0) diff += 1440;
             const total = `${Math.floor(diff/60)}h ${diff%60}m`;
-            
-            update(ref(db, `trailers/${id}`), { 
-                klar: true, 
-                utford: utTime, 
-                total: total,
-                notering: finalNote 
-            });
+            update(ref(db, `trailers/${id}`), { klar: true, utford: utTime, total: total, notering: finalNote });
         };
 
         window.updateVal = (id, field, val) => update(ref(db, `trailers/${id}`), { [field]: val });
@@ -226,7 +247,8 @@
             if(!activeTable || !doneList) return;
 
             document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('tab-active'));
-            document.getElementById('tab-' + window.currentDay).classList.add('tab-active');
+            const activeTab = document.getElementById('tab-' + window.currentDay);
+            if(activeTab) activeTab.classList.add('tab-active');
 
             activeTable.innerHTML = ""; doneList.innerHTML = "";
             let aCount = 0, dCount = 0;
@@ -243,7 +265,7 @@
                     <tr class="border-b ${rowClass}">
                         <td class="p-5 font-black text-4xl">${t.nr}</td>
                         <td class="p-5 font-bold text-slate-500 uppercase italic">Port ${t.port}<br><span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'}">${t.typ}</span></td>
-                        <td class="p-5"><span class="bg-slate-100 px-3 py-1 rounded text-[10px] font-black uppercase border">${t.avd}</span></td>
+                        <td class="p-5"><span class="bg-slate-100 px-3 py-1 rounded text-[10px] font-black uppercase border tracking-widest">${t.avd}</span></td>
                         <td class="p-5">
                             <select onchange="updateVal('${id}', 'status', this.value)" class="bg-white border-2 p-2 rounded-lg text-xs font-black w-full mb-2">
                                 <option ${t.status==='Normal'?'selected':''}>Normal</option>
