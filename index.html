@@ -23,6 +23,10 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #1e293b; z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
+
+        /* Snyggare input-styling för redigering i tabell */
+        .edit-input { background: transparent; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .edit-input:focus { border-bottom-color: #3b82f6; outline: none; background: rgba(59, 130, 246, 0.05); }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen pb-24 sm:pb-48 font-sans text-slate-700">
@@ -95,8 +99,7 @@
                         <button onclick="clearHistory()" class="text-red-500 bg-red-50 px-3 sm:px-4 py-1 sm:py-2 rounded-lg text-[8px] sm:text-[9px] font-black uppercase border border-red-300 hover:bg-red-500 hover:text-white transition-all">🗑️ Rensa</button>
                     </div>
                     <div id="doneList" class="space-y-3 sm:space-y-4 bg-slate-50/50 p-4 sm:p-6 rounded-b-2xl border-x border-b border-slate-300">
-                        <!-- Done list items will be rendered here -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
@@ -156,7 +159,7 @@
         let allTrailers = {};
         window.currentDay = 'Måndag';
 
-        // --- INLOGGNINGSLOGIK MED 1 TIMMES TIMEOUT ---
+        // --- INLOGGNINGSLOGIK ---
         const SESSION_TIMEOUT = 60 * 60 * 1000;
 
         window.checkLogin = () => {
@@ -170,6 +173,11 @@
             }
         };
 
+        // Lyssna på Enter i inloggningsfältet
+        document.getElementById('passInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.checkLogin();
+        });
+
         function showApp() {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
@@ -180,13 +188,12 @@
             location.reload();
         };
 
-        // Kolla vid uppstart
         const lastLogin = localStorage.getItem('logistikLoginTime');
         if (lastLogin && (Date.now() - lastLogin < SESSION_TIMEOUT)) {
             showApp();
         }
 
-        // --- RESTEN AV FUNKTIONERNA ---
+        // --- FUNKTIONER ---
 
         window.switchTab = (tab) => {
             window.currentDay = tab;
@@ -196,9 +203,13 @@
         };
 
         document.getElementById('addBtn').onclick = () => {
-            const nr = document.getElementById('trailerNr').value.trim();
-            const port = document.getElementById('portNr').value.trim();
+            const nrInput = document.getElementById('trailerNr');
+            const portInput = document.getElementById('portNr');
+            const nr = nrInput.value.trim();
+            const port = portInput.value.trim();
+            
             if (!nr) return;
+
             push(trailersRef, {
                 nr, port, typ: document.getElementById('typSelect').value,
                 avd: document.getElementById('deptSelect').value,
@@ -206,7 +217,10 @@
                 begart: new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}),
                 klar: false, error: false, timestamp: Date.now()
             });
-            document.getElementById('trailerNr').value = ""; document.getElementById('portNr').value = "";
+
+            nrInput.value = ""; 
+            portInput.value = "";
+            nrInput.focus(); // Flytta fokus tillbaka till start
         };
 
         window.markDone = (id) => {
@@ -274,10 +288,24 @@
                     aCount++;
                     const rowClass = t.status === 'PRIO' ? 'row-prio' : (t.status === 'Hittar ej' ? 'row-problem' : '');
                     activeTable.innerHTML += `
-                    <tr class="border-b ${rowClass}">
-                        <td class="p-3 sm:p-5 font-black text-2xl sm:text-4xl">${t.nr}</td>
-                        <td class="p-3 sm:p-5 font-bold text-slate-500 uppercase italic text-sm sm:text-base">Port ${t.port}<br><span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'}">${t.typ}</span></td>
-                        <td class="p-3 sm:p-5"><span class="bg-slate-100 px-2 sm:px-3 py-1 rounded text-[9px] sm:text-[10px] font-black uppercase border tracking-widest">${t.avd}</span></td>
+                    <tr class="border-b ${rowClass} transition-colors">
+                        <td class="p-3 sm:p-5">
+                            <input type="text" value="${t.nr}" 
+                                class="font-black text-2xl sm:text-4xl w-full edit-input"
+                                onchange="updateVal('${id}', 'nr', this.value)">
+                        </td>
+                        <td class="p-3 sm:p-5 font-bold text-slate-500 uppercase italic text-sm sm:text-base text-left">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] text-slate-400 not-italic">PORT</span>
+                                <input type="text" value="${t.port}" 
+                                    class="edit-input w-16 font-black text-lg"
+                                    onchange="updateVal('${id}', 'port', this.value)">
+                            </div>
+                            <span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'}">${t.typ}</span>
+                        </td>
+                        <td class="p-3 sm:p-5">
+                            <span class="bg-slate-100 px-2 sm:px-3 py-1 rounded text-[9px] sm:text-[10px] font-black uppercase border tracking-widest">${t.avd}</span>
+                        </td>
                         <td class="p-3 sm:p-5">
                             <select onchange="updateVal('${id}', 'status', this.value)" class="bg-white border-2 p-1 sm:p-2 rounded-lg text-xs font-black w-full mb-1 sm:mb-2">
                                 <option ${t.status==='Normal'?'selected':''}>Normal</option>
