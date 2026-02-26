@@ -106,7 +106,30 @@
                         <h2 class="text-lg sm:text-xl font-black uppercase italic text-blue-600 mb-2 sm:mb-0">📈 Veckoöversikt</h2>
                         <button onclick="addNewWeekRow()" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs font-black uppercase">
                             <span class="hidden sm:inline">+ Ny vecka</span>
-="nav-tab flex-1 py-4 sm:py-5 font-bold text-[10px] sm:text-[11px] uppercase border-r text-slate-500">Tor</button>
+                            <span class="inline sm:hidden">+</span>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full excel-table text-[10px] sm:text-sm">
+                            <thead class="bg-slate-100 text-[9px] sm:text-[10px] font-black uppercase">
+                                <tr><th>Vecka</th><th>Mån</th><th>Tis</th><th>Ons</th><th>Tor</th><th>Fre</th><th>Totalt</th><th>Radera</th></tr>
+                            </thead>
+                            <tbody id="weekBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-24 left-0 right-0 text-center pointer-events-none opacity-40">
+            <p class="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.3em]">From Viktor with ❤️</p>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 flex overflow-x-auto shadow-2xl z-50">
+            <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab flex-1 py-4 sm:py-5 font-bold text-[10px] sm:text-[11px] uppercase border-r text-slate-500">Mån</button>
+            <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab flex-1 py-4 sm:py-5 font-bold text-[10px] sm:text-[11px] uppercase border-r text-slate-500">Tis</button>
+            <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab flex-1 py-4 sm:py-5 font-bold text-[10px] sm:text-[11px] uppercase border-r text-slate-500">Ons</button>
+            <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab flex-1 py-4 sm:py-5 font-bold text-[10px] sm:text-[11px] uppercase border-r text-slate-500">Tor</button>
             <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab flex-1 py-4 sm:py-5 font-bold text-[10px] sm:text-[11px] uppercase border-r text-slate-500">Fre</button>
             <button onclick="switchTab('Översikt')" id="tab-Översikt" class="nav-tab flex-1 py-4 sm:py-5 font-black text-[10px] sm:text-[11px] uppercase text-blue-600 bg-blue-50 italic">Översikt</button>
         </div>
@@ -162,62 +185,6 @@
         if (lastLogin && (Date.now() - lastLogin < SESSION_TIMEOUT)) {
             showApp();
         }
-
-        // --- NEW INLINE EDITING FUNCTION ---
-        window.startInlineEdit = (event, id, field, initialValue) => {
-            event.stopPropagation(); // Prevents other potential double-click events on parent elements
-            const originalElement = event.currentTarget; // The <td> or <span> that was double-clicked
-
-            // Create an input element
-            const input = document.createElement('input');
-            input.type = 'text'; // Use 'text' for flexibility (e.g., 'A1' for port)
-            input.value = initialValue;
-
-            // Apply Tailwind CSS classes for consistent styling
-            let inputClasses = 'w-full border-2 p-1 rounded-md text-center focus:outline-none focus:border-blue-500';
-            if (field === 'nr') {
-                inputClasses += ' font-black text-2xl sm:text-4xl'; // Matches trailer nr styling
-            } else if (field === 'port') {
-                inputClasses += ' font-bold text-slate-500 uppercase italic text-sm sm:text-base'; // Matches port styling
-            }
-            input.className = inputClasses;
-
-            // Replace the clicked element with the input field
-            originalElement.replaceWith(input);
-            input.focus(); // Automatically focus the input for immediate editing
-
-            // Function to save changes
-            const saveChanges = () => {
-                const newValue = input.value.trim();
-                if (newValue !== initialValue) {
-                    // Value has changed, update Firebase
-                    update(ref(db, `trailers/${id}`), { [field]: newValue })
-                        .then(() => {
-                            // Firebase's `onValue` listener will automatically trigger `renderAll`
-                            // to update the UI with the new data.
-                        })
-                        .catch(error => {
-                            console.error("Error updating field:", error);
-                            // If there's an error, re-render to revert the UI or show an error message
-                            renderAll();
-                        });
-                } else {
-                    // No change, just revert the input back to its display state
-                    renderAll();
-                }
-            };
-
-            // Save on blur (when the input loses focus)
-            input.onblur = saveChanges;
-
-            // Save on Enter key press
-            input.onkeydown = (e) => {
-                if (e.key === 'Enter') {
-                    input.blur(); // Trigger the onblur event to save
-                }
-            };
-        };
-
 
         // --- RESTEN AV FUNKTIONERNA ---
 
@@ -297,8 +264,24 @@
             activeTable.innerHTML = ""; doneList.innerHTML = "";
             let aCount = 0, dCount = 0;
 
-            const sortedIds = Object.keys(allTrailers).sort((a,b) => allTrailers[a].timestamp -No response
-'?'selected':''}>PRIO</option>
+            const sortedIds = Object.keys(allTrailers).sort((a,b) => allTrailers[a].timestamp - allTrailers[b].timestamp);
+
+            sortedIds.forEach(id => {
+                const t = allTrailers[id];
+                if (t.dag !== window.currentDay) return;
+
+                if (!t.klar) {
+                    aCount++;
+                    const rowClass = t.status === 'PRIO' ? 'row-prio' : (t.status === 'Hittar ej' ? 'row-problem' : '');
+                    activeTable.innerHTML += `
+                    <tr class="border-b ${rowClass}">
+                        <td class="p-3 sm:p-5 font-black text-2xl sm:text-4xl">${t.nr}</td>
+                        <td class="p-3 sm:p-5 font-bold text-slate-500 uppercase italic text-sm sm:text-base">Port ${t.port}<br><span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'}">${t.typ}</span></td>
+                        <td class="p-3 sm:p-5"><span class="bg-slate-100 px-2 sm:px-3 py-1 rounded text-[9px] sm:text-[10px] font-black uppercase border tracking-widest">${t.avd}</span></td>
+                        <td class="p-3 sm:p-5">
+                            <select onchange="updateVal('${id}', 'status', this.value)" class="bg-white border-2 p-1 sm:p-2 rounded-lg text-xs font-black w-full mb-1 sm:mb-2">
+                                <option ${t.status==='Normal'?'selected':''}>Normal</option>
+                                <option ${t.status==='PRIO'?'selected':''}>PRIO</option>
                                 <option ${t.status==='Hittar ej'?'selected':''}>Hittar ej</option>
                             </select>
                             <input id="note-${id}" type="text" value="${t.notering||''}" onblur="updateVal('${id}', 'notering', this.value)" placeholder="Skriv notering..." class="w-full text-xs italic font-bold border-b-2 py-1 outline-none">
@@ -337,4 +320,3 @@
     </script>
 </body>
 </html>
-
