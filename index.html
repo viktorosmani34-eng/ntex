@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TUG Lista - Master Pro</title>
+    <title>TUGG Lista - Master Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
@@ -22,6 +22,7 @@
         .edit-input { background: transparent; border: none; outline: none; width: 100%; font-weight: 900; text-transform: uppercase; }
         
         .drag-handle { cursor: grab; color: #cbd5e1; display: flex; align-items: center; padding: 0 10px; }
+        .drag-handle:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.3; background: #dbeafe; }
 
         #loginOverlay {
@@ -36,7 +37,7 @@
         @keyframes slideUp { from { transform: translate(-50%, 100%); } to { transform: translate(-50%, 0); } }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen pb-32 font-sans text-slate-700">
+<body class="bg-slate-100 min-h-screen font-sans text-slate-700">
 
     <div id="undoToast" class="bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-slate-600">
         <span class="font-bold text-sm">Uppdrag klart!</span>
@@ -45,16 +46,16 @@
 
     <div id="loginOverlay">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-80 text-center border-t-8 border-blue-600">
-            <h2 class="text-2xl font-black mb-6 uppercase italic text-slate-800">🚛 Tug Lista</h2>
+            <h2 class="text-2xl font-black mb-6 uppercase italic text-slate-800">🚛 Tugg Lista</h2>
             <input id="passInput" type="password" placeholder="Lösenord" class="w-full border-2 p-4 rounded-xl mb-4 text-center text-xl font-bold border-slate-200 outline-none focus:border-blue-500">
             <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg">Logga in</button>
         </div>
     </div>
 
-    <div id="mainContent" class="hidden">
+    <div id="mainContent" class="hidden pb-32">
         <div class="max-w-6xl mx-auto px-2 pt-4">
             <div class="flex justify-between items-center mb-6 px-2">
-                <h1 class="text-2xl font-black text-slate-800 italic uppercase">🚛 Tug Lista</h1>
+                <h1 class="text-2xl font-black text-slate-800 italic uppercase">🚛 Tugg Lista</h1>
                 <button onclick="logout()" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Logga ut</button>
             </div>
 
@@ -111,6 +112,10 @@
 
                 <div id="doneList" class="space-y-2 px-2"></div>
             </div>
+
+            <div class="text-center mt-12 mb-4">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Made with &lt;3 from Viktor</p>
+            </div>
         </div>
 
         <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 flex z-50 shadow-2xl">
@@ -143,16 +148,24 @@
         let undoTimer = null;
         let lastFinishedId = null;
 
+        // Login check (Uppdaterat till "Tugglista")
         window.checkLogin = () => {
-            if(document.getElementById('passInput').value === "Tuglista") {
+            if(document.getElementById('passInput').value === "Tugglista" || document.getElementById('passInput').value === "Tuglista") {
                 localStorage.setItem('logistikLoginTime', Date.now());
                 showApp();
             }
         };
+
+        // Gå förbi login om trycker Enter på lösenordsfältet
+        document.getElementById('passInput').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') checkLogin();
+        });
+
         function showApp() {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
         }
+
         window.logout = () => { localStorage.removeItem('logistikLoginTime'); location.reload(); };
         if (localStorage.getItem('logistikLoginTime')) showApp();
 
@@ -162,7 +175,15 @@
             renderAll();
         };
 
-        document.getElementById('addBtn').onclick = () => {
+        // Lägg till uppdrag vid klick...
+        document.getElementById('addBtn').onclick = createTrailer;
+        
+        // ...eller när man trycker Enter i Port-fältet
+        document.getElementById('portNr').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') createTrailer();
+        });
+
+        function createTrailer() {
             const nr = document.getElementById('trailerNr').value.trim();
             const port = document.getElementById('portNr').value.trim();
             if (!nr) return;
@@ -175,10 +196,11 @@
                 notering: "",
                 klar: false, 
                 timestamp: Date.now(),
-                order: Date.now()
+                order: Date.now() // För drag and drop logiken
             });
             document.getElementById('trailerNr').value = ""; document.getElementById('portNr').value = "";
-        };
+            document.getElementById('trailerNr').focus(); // Hoppa tillbaka till Trailer-fältet
+        }
 
         window.updateVal = (id, field, val) => update(ref(db, `trailers/${id}`), { [field]: val });
 
@@ -205,6 +227,7 @@
             if(confirm("Radera uppdraget?")) remove(ref(db, `trailers/${id}`));
         };
 
+        // Initiera SortableJS för dra-och-släpp
         const el = document.getElementById('activeTable');
         Sortable.create(el, {
             handle: '.drag-handle',
@@ -237,10 +260,15 @@
             const sortedIds = Object.keys(allTrailers).sort((a,b) => {
                 const tA = allTrailers[a];
                 const tB = allTrailers[b];
+                
                 const prioA = tA.status === 'PRIO' ? 1 : 0;
                 const prioB = tB.status === 'PRIO' ? 1 : 0;
+                
+                // PRIO alltid överst
                 if (prioA !== prioB) return prioB - prioA;
-                return (tA.order || 0) - (tB.order || 0);
+                
+                // Sortera på ordning (om flyttad) annars skapad tid
+                return (tA.order || tA.timestamp) - (tB.order || tB.timestamp);
             });
 
             sortedIds.forEach(id => {
