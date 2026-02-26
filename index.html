@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TUG Lista - Mobiloptimerad</title>
+    <title>TUG Lista - Adaptive View</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-excel-done { background-color: #00ff00 !important; color: black !important; font-weight: 900; }
         .row-prio { background-color: #fef08a !important; border-left: 8px solid #facc15 !important; }
         .row-problem { background-color: #fee2e2 !important; border-left: 8px solid #f87171 !important; }
-        .row-error-done { background-color: #fecaca !important; border: 2px solid #ef4444 !important; }
         .tab-active { background-color: white !important; border-top: 4px solid #3b82f6 !important; color: #1e40af !important; font-weight: 900 !important; }
 
-        .badge-fixa { background-color: #f59e0b; color: white; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; }
-        .badge-in { background-color: #3b82f6; color: white; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; }
-        .badge-ut { background-color: #10b981; color: white; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; }
+        .badge-fixa { background-color: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
+        .badge-in { background-color: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
+        .badge-ut { background-color: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
 
         .edit-input { background: transparent; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .edit-input:focus { border-bottom-color: #3b82f6; outline: none; background: rgba(59, 130, 246, 0.05); }
@@ -24,75 +23,74 @@
             background: #1e293b; z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
 
-        /* Mobil-specifika justeringar */
         @media (max-width: 640px) {
-            .btn-klar-mobile { width: 100px; height: 55px; font-size: 1.1rem !important; }
-            .trailer-text-mobile { font-size: 2.2rem !important; line-height: 1; }
-            .port-text-mobile { font-size: 1.5rem !important; }
+            .mobile-prio-btn { width: 90px; height: 50px; font-size: 1.1rem !important; }
+            .mobile-trailer-text { font-size: 2rem !important; }
         }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen pb-32 sm:pb-48 font-sans text-slate-700">
+<body class="bg-slate-100 min-h-screen pb-32 font-sans text-slate-700">
 
     <div id="loginOverlay">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-80 text-center border-t-8 border-blue-600">
             <h2 class="text-2xl font-black mb-6 uppercase italic">🚛 Tug Lista</h2>
-            <input id="passInput" type="password" placeholder="Lösenord" class="w-full border-2 p-4 rounded-xl mb-4 text-center text-xl font-bold outline-none border-slate-200 focus:border-blue-500">
-            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg hover:bg-blue-700">Logga in</button>
+            <input id="passInput" type="password" placeholder="Lösenord" class="w-full border-2 p-4 rounded-xl mb-4 text-center text-xl font-bold border-slate-200 outline-none focus:border-blue-500">
+            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg">Logga in</button>
             <p id="errorMsg" class="text-red-500 text-xs mt-4 font-bold hidden">FEL LÖSENORD!</p>
         </div>
     </div>
 
     <div id="mainContent" class="hidden">
-        <div class="max-w-6xl mx-auto px-2 sm:px-4 pt-4">
+        <div class="max-w-6xl mx-auto px-2 pt-4">
             <div class="flex justify-between items-center mb-4">
                 <h1 class="text-xl font-black text-slate-800 italic">🚛 TUG LISTA</h1>
-                <button onclick="logout()" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Logga ut</button>
+                <button onclick="logout()" class="text-[10px] font-bold text-slate-400 uppercase">Logga ut</button>
             </div>
 
             <div id="dailyView">
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
                     <div class="grid grid-cols-2 gap-3 sm:grid-cols-5 items-end">
-                        <div class="col-span-1">
+                        <div>
                             <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Trailer</label>
                             <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500">
                         </div>
-                        <div class="col-span-1">
+                        <div>
                             <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Port</label>
                             <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500">
                         </div>
-                        <div>
+                        <div class="hidden sm:block">
                             <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Avd</label>
                             <select id="deptSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold bg-white">
                                 <option>Imp</option><option>Exp</option><option>Secu</option><option>Mattor</option><option>Xylem</option><option>Annat</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="hidden sm:block">
                             <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Typ</label>
                             <select id="typSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold bg-white">
                                 <option>In</option><option>Ut</option><option>Fixa</option>
                             </select>
                         </div>
                         <div class="col-span-2 sm:col-span-1">
-                           <button id="addBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs active:scale-95 transition-all">Skapa rad</button>
+                           <button id="addBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs">Skapa rad</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-8">
                     <div class="bg-[#1e293b] p-3 rounded-t-2xl flex justify-between items-center">
-                        <h2 class="text-white text-[10px] font-black uppercase italic tracking-widest">⚠️ ATT GÖRA - <span id="currentTabLabel">Måndag</span></h2>
+                        <h2 class="text-white text-[10px] font-black uppercase tracking-widest italic">⚠️ SKA GÖRAS - <span id="currentTabLabel">Måndag</span></h2>
                         <span id="activeCount" class="bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black">0 st</span>
                     </div>
                     <div class="bg-white rounded-b-2xl shadow-xl border border-slate-300 overflow-hidden">
                         <table class="w-full border-collapse">
-                            <thead class="bg-slate-50 border-b text-[10px] uppercase text-slate-400 font-bold hidden sm:table-header-group">
+                            <thead class="bg-slate-50 border-b text-[10px] uppercase text-slate-400 font-bold">
                                 <tr>
                                     <th class="p-4 text-left">Trailer</th>
                                     <th class="p-4 text-left">Port</th>
-                                    <th class="p-4 text-left">Avd</th>
-                                    <th class="p-4 text-left hidden md:table-cell">Notering</th>
-                                    <th class="p-4 text-center">Åtgärd</th>
+                                    <th class="p-4 text-left hidden sm:table-cell">Avd/Typ</th>
+                                    <th class="p-4 text-left hidden md:table-cell">Status & Notering</th>
+                                    <th class="p-4 text-left hidden lg:table-cell">Begärt</th>
+                                    <th class="p-4 text-right">Åtgärd</th>
                                 </tr>
                             </thead>
                             <tbody id="activeTable"></tbody>
@@ -101,23 +99,21 @@
                 </div>
 
                 <div>
-                    <div class="flex justify-between items-center mb-2 px-2">
-                        <h2 class="text-slate-500 text-[10px] font-black uppercase italic">✅ KLARA IDAG (<span id="doneCount">0</span>)</h2>
-                        <button onclick="clearHistory()" class="text-red-500 text-[9px] font-bold uppercase">Rensa lista</button>
-                    </div>
-                    <div id="doneList" class="space-y-2"></div>
+                    <h2 class="text-slate-500 text-[10px] font-black uppercase italic mb-2 px-2">✅ KLARA IDAG</h2>
+                    <div id="doneList" class="space-y-2 px-1"></div>
                 </div>
             </div>
 
             <div id="statsView" class="hidden">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <table class="w-full excel-table text-sm">
+                    <table class="w-full text-sm">
                         <thead class="bg-slate-100 font-black uppercase text-[10px]">
-                            <tr><th>Vecka</th><th>Mån</th><th>Tis</th><th>Ons</th><th>Tor</th><th>Fre</th><th>Totalt</th></tr>
+                            <tr class="border-b">
+                                <th class="p-3">Vecka</th><th>Mån</th><th>Tis</th><th>Ons</th><th>Tor</th><th>Fre</th><th>Totalt</th>
+                            </tr>
                         </thead>
                         <tbody id="weekBody"></tbody>
                     </table>
-                    <button onclick="addNewWeekRow()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase">+ Ny vecka</button>
                 </div>
             </div>
         </div>
@@ -128,7 +124,7 @@
             <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500">Ons</button>
             <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500">Tor</button>
             <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab flex-1 py-5 font-bold text-[11px] uppercase border-r text-slate-500">Fre</button>
-            <button onclick="switchTab('Översikt')" id="tab-Översikt" class="nav-tab flex-1 py-5 font-black text-[11px] uppercase text-blue-600 bg-blue-50 italic">Total</button>
+            <button onclick="switchTab('Översikt')" id="tab-Översikt" class="nav-tab flex-1 py-5 font-black text-[11px] uppercase text-blue-600 bg-blue-50">Översikt</button>
         </div>
     </div>
 
@@ -141,7 +137,7 @@
             authDomain: "lagerlogistik-87feb.firebaseapp.com",
             databaseURL: "https://lagerlogistik-87feb-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "lagerlogistik-87feb",
-            storageBucket: "lagerlogistik-87feb.firebasestorage.app",
+            storageBucket: "lagerlogistik-87feb.firebasedatabase.app",
             messagingSenderId: "206906307140",
             appId: "1:206906307140:web:49acbdc1ab3445bc718211"
         };
@@ -149,20 +145,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const trailersRef = ref(db, 'trailers');
-        const weeksRef = ref(db, 'weeks');
         let allTrailers = {};
         window.currentDay = 'Måndag';
 
-        // LOGIN LOGIK
         window.checkLogin = () => {
             if(document.getElementById('passInput').value === "Tuglista") {
                 localStorage.setItem('logistikLoginTime', Date.now());
                 showApp();
-            } else {
-                document.getElementById('errorMsg').classList.remove('hidden');
-            }
+            } else { document.getElementById('errorMsg').classList.remove('hidden'); }
         };
-
         document.getElementById('passInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') window.checkLogin(); });
 
         function showApp() {
@@ -175,7 +166,6 @@
 
         window.logout = () => { localStorage.removeItem('logistikLoginTime'); location.reload(); };
 
-        // TAB SWITCH
         window.switchTab = (tab) => {
             window.currentDay = tab;
             document.getElementById('dailyView').classList.toggle('hidden', tab === 'Översikt');
@@ -183,7 +173,6 @@
             renderAll();
         };
 
-        // CREATE
         document.getElementById('addBtn').onclick = () => {
             const nrInput = document.getElementById('trailerNr');
             const portInput = document.getElementById('portNr');
@@ -202,12 +191,12 @@
         };
 
         window.updateVal = (id, field, val) => update(ref(db, `trailers/${id}`), { [field]: val });
-        window.deleteTrailer = (id) => confirm("Radera?") && remove(ref(db, `trailers/${id}`));
         window.markDone = (id) => {
-            const t = allTrailers[id];
             const now = new Date();
-            const utTime = now.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'});
-            update(ref(db, `trailers/${id}`), { klar: true, utford: utTime });
+            update(ref(db, `trailers/${id}`), { 
+                klar: true, 
+                utford: now.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}) 
+            });
         };
 
         onValue(trailersRef, (snapshot) => { allTrailers = snapshot.val() || {}; renderAll(); });
@@ -235,34 +224,44 @@
                     activeTable.innerHTML += `
                     <tr class="border-b ${rowClass}">
                         <td class="p-2 sm:p-5">
-                            <input type="text" value="${t.nr}" class="font-black trailer-text-mobile sm:text-4xl w-full edit-input" onchange="updateVal('${id}', 'nr', this.value)">
+                            <input type="text" value="${t.nr}" class="font-black mobile-trailer-text sm:text-4xl w-full edit-input" onchange="updateVal('${id}', 'nr', this.value)">
                         </td>
                         <td class="p-2 sm:p-5">
-                            <div class="flex flex-col">
-                                <input type="text" value="${t.port}" class="font-black port-text-mobile sm:text-2xl text-blue-600 edit-input w-16" onchange="updateVal('${id}', 'port', this.value)">
-                                <span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'} w-max mt-1">${t.typ}</span>
+                            <input type="text" value="${t.port}" class="font-black text-2xl sm:text-3xl text-blue-600 edit-input w-20" onchange="updateVal('${id}', 'port', this.value)">
+                            <div class="sm:hidden mt-1"><span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'}">${t.typ}</span></div>
+                        </td>
+                        <td class="p-4 hidden sm:table-cell">
+                            <div class="flex flex-col gap-1">
+                                <span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-black border uppercase w-max">${t.avd}</span>
+                                <span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'} w-max">${t.typ}</span>
                             </div>
                         </td>
-                        <td class="p-2 sm:p-5">
-                            <span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-black border uppercase">${t.avd}</span>
-                        </td>
                         <td class="p-4 hidden md:table-cell">
+                            <select onchange="updateVal('${id}', 'status', this.value)" class="bg-white border p-1 rounded text-xs font-black mb-1 w-full">
+                                <option ${t.status==='Normal'?'selected':''}>Normal</option>
+                                <option ${t.status==='PRIO'?'selected':''}>PRIO</option>
+                                <option ${t.status==='Hittar ej'?'selected':''}>Hittar ej</option>
+                            </select>
                             <input type="text" value="${t.notering||''}" onblur="updateVal('${id}', 'notering', this.value)" placeholder="Notering..." class="w-full text-xs italic border-b py-1 outline-none">
                         </td>
+                        <td class="p-4 hidden lg:table-cell font-black text-slate-400 italic">${t.begart}</td>
                         <td class="p-2 sm:p-5 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <button onclick="markDone('${id}')" class="bg-green-600 text-white font-black px-4 rounded-xl shadow-lg uppercase btn-klar-mobile active:scale-95">KLAR</button>
-                                <button onclick="deleteTrailer('${id}')" class="text-slate-200 px-2 text-xl">✕</button>
+                                <button onclick="markDone('${id}')" class="bg-green-600 text-white font-black px-4 rounded-xl shadow-lg uppercase mobile-prio-btn active:scale-95">KLAR</button>
+                                <button onclick="confirm('Radera?') && remove(ref(db, 'trailers/${id}'))" class="text-slate-200 px-2 text-xl hidden sm:block">✕</button>
                             </div>
                         </td>
                     </tr>`;
                 } else {
                     dCount++;
                     doneList.innerHTML += `
-                    <div class="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center p-3 bg-white border rounded-xl shadow-sm">
                         <div class="flex items-center gap-4">
                             <div class="bg-excel-done px-3 py-1 rounded-lg font-black text-xl border border-green-300">${t.nr}</div>
-                            <div class="text-[10px] font-bold text-slate-400">P${t.port} - ${t.avd} <span class="text-green-600 ml-2">KLAR ${t.utford}</span></div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase">
+                                P${t.port} <span class="hidden sm:inline">- ${t.avd} (${t.typ})</span> 
+                                <span class="text-green-600 ml-2">KLART ${t.utford}</span>
+                            </div>
                         </div>
                         <button onclick="updateVal('${id}', 'klar', false)" class="text-slate-300 text-xl">↺</button>
                     </div>`;
