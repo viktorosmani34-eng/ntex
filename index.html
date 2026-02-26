@@ -2,87 +2,98 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TUG Lista - Edit Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TUG Lista - Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-excel-done { background-color: #00ff00 !important; color: black !important; font-weight: 900; }
-        .row-prio { background-color: #fef08a !important; border-left: 10px solid #facc15 !important; }
-        .row-problem { background-color: #fee2e2 !important; border-left: 10px solid #f87171 !important; }
+        .row-prio { background-color: #fef08a !important; border-left: 12px solid #facc15 !important; }
+        .row-problem { background-color: #fee2e2 !important; border-left: 12px solid #f87171 !important; }
         .tab-active { background-color: white !important; border-top: 4px solid #3b82f6 !important; color: #1e40af !important; font-weight: 900 !important; }
-
+        
         .badge-fixa { background-color: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
         .badge-in { background-color: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
         .badge-ut { background-color: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; }
 
-        /* Stil för redigerbara fält */
-        .edit-input { background: transparent; border: none; outline: none; width: 100%; font-weight: 900; }
+        .edit-input { background: transparent; border: none; outline: none; width: 100%; font-weight: 900; text-transform: uppercase; }
         .edit-input:focus { border-bottom: 2px solid #3b82f6; background: rgba(59, 130, 246, 0.05); }
 
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #1e293b; z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
+
+        #undoToast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            z-index: 100; display: none;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translate(-50%, 100%); } to { transform: translate(-50%, 0); } }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen pb-24 sm:pb-48 font-sans text-slate-700">
+<body class="bg-slate-100 min-h-screen pb-32 font-sans text-slate-700">
+
+    <div id="undoToast" class="bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-slate-600">
+        <span class="font-bold">Uppdrag klart!</span>
+        <button id="undoBtn" class="bg-blue-600 px-4 py-1 rounded-lg font-black text-xs uppercase italic">Ångra ↺</button>
+    </div>
 
     <div id="loginOverlay">
-        <div class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl w-80 sm:w-96 text-center border-t-8 border-blue-600">
-            <h2 class="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase italic">🚛 Tug Lista</h2>
-            <input id="passInput" type="password" placeholder="Lösenord" class="w-full border-2 p-3 sm:p-4 rounded-xl mb-3 sm:mb-4 text-center text-lg sm:text-xl font-bold outline-none border-slate-200 focus:border-blue-500">
-            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-3 sm:py-4 rounded-xl uppercase shadow-lg">Logga in</button>
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-80 text-center border-t-8 border-blue-600">
+            <h2 class="text-2xl font-black mb-6 uppercase italic tracking-tighter text-slate-800">🚛 Tug Lista</h2>
+            <input id="passInput" type="password" placeholder="Lösenord" class="w-full border-2 p-4 rounded-xl mb-4 text-center text-xl font-bold border-slate-200 outline-none focus:border-blue-500">
+            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg">Logga in</button>
         </div>
     </div>
 
     <div id="mainContent" class="hidden">
-        <div class="max-w-6xl mx-auto px-2 sm:px-4 pt-4 sm:pt-8">
-            <div class="flex justify-between items-center mb-4 sm:mb-8">
-                <h1 class="text-xl sm:text-2xl font-black text-slate-800 italic">🚛 TUG LISTA</h1>
+        <div class="max-w-6xl mx-auto px-2 pt-4">
+            <div class="flex justify-between items-center mb-6 px-2">
+                <h1 class="text-2xl font-black text-slate-800 italic uppercase">🚛 Tug Lista</h1>
                 <button onclick="logout()" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Logga ut</button>
             </div>
 
-            <div id="dailyView">
-                <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 sm:mb-10">
-                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-5 items-end">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Trailer nr</label>
-                            <input id="trailerNr" type="text" class="w-full border border-slate-300 p-2 sm:p-3 rounded-xl font-bold outline-none focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Port</label>
-                            <input id="portNr" type="text" class="w-full border border-slate-300 p-2 sm:p-3 rounded-xl font-bold outline-none focus:border-blue-500">
-                        </div>
-                        <div class="hidden sm:block">
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Avdelning</label>
-                            <select id="deptSelect" class="w-full border border-slate-300 p-2 sm:p-3 rounded-xl font-bold bg-white">
-                                <option>Imp</option><option>Exp</option><option>Secu</option><option>Mattor</option><option>Xylem</option><option>Annat</option>
-                            </select>
-                        </div>
-                        <div class="hidden sm:block">
-                            <label class="block text-[10px] font-black text-slate-400 mb-2 uppercase">Typ</label>
-                            <select id="typSelect" class="w-full border border-slate-300 p-2 sm:p-3 rounded-xl font-bold bg-white">
-                                <option>In</option><option>Ut</option><option>Fixa</option>
-                            </select>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1">
-                           <button id="addBtn" class="w-full bg-blue-600 text-white font-black py-3 sm:py-4 rounded-xl shadow-xl uppercase text-xs">Skapa rad</button>
-                        </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-5 items-end">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Trailer</label>
+                        <input id="trailerNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500 uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Port</label>
+                        <input id="portNr" type="text" class="w-full border border-slate-300 p-3 rounded-xl font-bold outline-none focus:border-blue-500">
+                    </div>
+                    <div class="hidden sm:block">
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Avdelning</label>
+                        <select id="deptSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold bg-white">
+                            <option>Imp</option><option>Exp</option><option>Secu</option><option>Mattor</option><option>Xylem</option><option>Annat</option>
+                        </select>
+                    </div>
+                    <div class="hidden sm:block">
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Typ</label>
+                        <select id="typSelect" class="w-full border border-slate-300 p-3 rounded-xl font-bold bg-white">
+                            <option>In</option><option>Ut</option><option>Fixa</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                       <button id="addBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs active:scale-95">Skapa uppdrag</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="mb-10">
-                    <div class="bg-[#1e293b] p-3 rounded-t-2xl flex justify-between items-center">
-                        <h2 class="text-white text-xs font-black uppercase italic">⚠️ SKA GÖRAS - <span id="currentTabLabel">Måndag</span></h2>
-                        <span id="activeCount" class="bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black">0 st</span>
-                    </div>
-                    <div class="bg-white rounded-b-2xl shadow-2xl border border-slate-300 overflow-hidden">
+            <div id="dailyView">
+                <div class="bg-[#1e293b] p-3 rounded-t-2xl flex justify-between items-center shadow-lg">
+                    <h2 class="text-white text-xs font-black uppercase italic tracking-widest">⚠️ Aktiva - <span id="currentTabLabel">Måndag</span></h2>
+                    <span id="activeCount" class="bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black italic tracking-tighter">0 st</span>
+                </div>
+                <div class="bg-white rounded-b-2xl shadow-xl border border-slate-300 overflow-hidden mb-8">
+                    <div class="overflow-x-auto">
                         <table class="w-full border-collapse">
                             <thead class="bg-slate-50 border-b text-[10px] uppercase text-slate-400 font-bold">
                                 <tr>
                                     <th class="p-3 sm:p-5 text-left">Trailer</th>
                                     <th class="p-3 sm:p-5 text-left">Port</th>
-                                    <th class="p-3 sm:p-5 text-left hidden sm:table-cell">Avd/Typ</th>
+                                    <th class="p-3 sm:p-5 text-left hidden sm:table-cell">Info</th>
                                     <th class="p-3 sm:p-5 text-left hidden sm:table-cell">Notering</th>
                                     <th class="p-3 sm:p-5 text-center">Åtgärd</th>
                                 </tr>
@@ -92,17 +103,15 @@
                     </div>
                 </div>
 
-                <div>
-                    <h2 class="text-slate-400 text-[10px] font-black uppercase mb-2 ml-2 italic text-center sm:text-left">✅ Klara idag</h2>
-                    <div id="doneList" class="space-y-2"></div>
-                </div>
+                <h2 class="text-slate-400 text-[10px] font-black uppercase mb-2 ml-2 italic tracking-widest">✅ Klara idag</h2>
+                <div id="doneList" class="space-y-2"></div>
             </div>
 
             <div id="statsView" class="hidden">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <table class="w-full excel-table text-sm">
-                        <thead class="bg-slate-100 font-black uppercase text-[10px]">
-                            <tr><th>Vecka</th><th>Mån</th><th>Tis</th><th>Ons</th><th>Tor</th><th>Fre</th><th>Totalt</th><th>Radera</th></tr>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-center border-collapse">
+                        <thead class="bg-slate-50 text-[10px] uppercase font-black">
+                            <tr><th class="border p-2">V.</th><th class="border p-2">Mån</th><th class="border p-2">Tis</th><th class="border p-2">Ons</th><th class="border p-2">Tor</th><th class="border p-2">Fre</th></tr>
                         </thead>
                         <tbody id="weekBody"></tbody>
                     </table>
@@ -110,13 +119,13 @@
             </div>
         </div>
 
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 flex z-50 shadow-2xl">
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 flex z-50 shadow-2xl overflow-hidden">
             <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab flex-1 py-4 font-bold text-[10px] uppercase border-r text-slate-500">Mån</button>
             <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab flex-1 py-4 font-bold text-[10px] uppercase border-r text-slate-500">Tis</button>
             <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab flex-1 py-4 font-bold text-[10px] uppercase border-r text-slate-500">Ons</button>
             <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab flex-1 py-4 font-bold text-[10px] uppercase border-r text-slate-500">Tor</button>
             <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab flex-1 py-4 font-bold text-[10px] uppercase border-r text-slate-500">Fre</button>
-            <button onclick="switchTab('Översikt')" id="tab-Översikt" class="nav-tab flex-1 py-4 font-black text-[10px] uppercase text-blue-600 bg-blue-50">Översikt</button>
+            <button onclick="switchTab('Översikt')" id="tab-Översikt" class="nav-tab flex-1 py-4 font-black text-[10px] uppercase text-blue-600 bg-blue-50 italic">Översikt</button>
         </div>
     </div>
 
@@ -138,7 +147,8 @@
         const db = getDatabase(app);
         const trailersRef = ref(db, 'trailers');
         let allTrailers = {};
-        window.currentDay = 'Måndag';
+        let undoTimer = null;
+        let lastFinishedId = null;
 
         window.checkLogin = () => {
             if(document.getElementById('passInput').value === "Tuglista") {
@@ -162,21 +172,36 @@
             renderAll();
         };
 
+        window.currentDay = 'Måndag';
+
         document.getElementById('addBtn').onclick = () => {
-            const nr = document.getElementById('trailerNr').value;
-            const port = document.getElementById('portNr').value;
+            const nr = document.getElementById('trailerNr').value.trim();
+            const port = document.getElementById('portNr').value.trim();
             if (!nr) return;
             push(trailersRef, {
-                nr, port, typ: document.getElementById('typSelect').value,
+                nr, port, 
+                typ: document.getElementById('typSelect').value,
                 avd: document.getElementById('deptSelect').value,
-                dag: window.currentDay, status: "Normal", notering: "",
+                dag: window.currentDay, 
+                status: "Normal", 
+                notering: "",
                 begart: new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}),
-                klar: false, timestamp: Date.now()
+                klar: false, 
+                timestamp: Date.now()
             });
             document.getElementById('trailerNr').value = ""; document.getElementById('portNr').value = "";
         };
 
-        window.updateVal = (id, field, val) => update(ref(db, `trailers/${id}`), { [field]: val });
+        // --- FUNKTIONER FÖR RADERING OCH ÄNDRING ---
+        window.deleteTrailer = (id) => {
+            if(confirm("Vill du radera detta uppdrag helt?")) {
+                remove(ref(db, `trailers/${id}`));
+            }
+        };
+
+        window.updateVal = (id, field, val) => {
+            update(ref(db, `trailers/${id}`), { [field]: val });
+        };
 
         window.markDone = (id) => {
             const now = new Date();
@@ -184,9 +209,29 @@
                 klar: true, 
                 utford: now.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}) 
             });
+            showUndo(id);
         };
 
-        onValue(trailersRef, (snapshot) => { allTrailers = snapshot.val() || {}; renderAll(); });
+        // --- UNDO LOGIK ---
+        function showUndo(id) {
+            lastFinishedId = id;
+            const toast = document.getElementById('undoToast');
+            toast.style.display = 'flex';
+            clearTimeout(undoTimer);
+            undoTimer = setTimeout(() => { toast.style.display = 'none'; }, 5000);
+        }
+
+        document.getElementById('undoBtn').onclick = () => {
+            if(lastFinishedId) {
+                update(ref(db, `trailers/${lastFinishedId}`), { klar: false, utford: null });
+                document.getElementById('undoToast').style.display = 'none';
+            }
+        };
+
+        onValue(trailersRef, (snapshot) => { 
+            allTrailers = snapshot.val() || {}; 
+            renderAll(); 
+        });
 
         function renderAll() {
             const activeTable = document.getElementById('activeTable');
@@ -199,7 +244,20 @@
             activeTable.innerHTML = ""; doneList.innerHTML = "";
             let aCount = 0;
 
-            const sortedIds = Object.keys(allTrailers).sort((a,b) => allTrailers[a].timestamp - allTrailers[b].timestamp);
+            // --- SORTERING ---
+            // 1. PRIO hamnar alltid först.
+            // 2. Alla andra efter tid (Äldst först = hamnar neråt när nytt kommer).
+            const sortedIds = Object.keys(allTrailers).sort((a,b) => {
+                const tA = allTrailers[a];
+                const tB = allTrailers[b];
+                
+                // PRIO-logik
+                const prioA = tA.status === 'PRIO' ? 1 : 0;
+                const prioB = tB.status === 'PRIO' ? 1 : 0;
+                
+                if (prioA !== prioB) return prioB - prioA; // PRIO först
+                return tA.timestamp - tB.timestamp; // Sen äldst först (nyare hamnar underst)
+            });
 
             sortedIds.forEach(id => {
                 const t = allTrailers[id];
@@ -209,50 +267,54 @@
                     aCount++;
                     const rowClass = t.status === 'PRIO' ? 'row-prio' : (t.status === 'Hittar ej' ? 'row-problem' : '');
                     activeTable.innerHTML += `
-                    <tr class="border-b ${rowClass}">
+                    <tr class="border-b ${rowClass} transition-colors">
                         <td class="p-3 sm:p-5">
-                            <input type="text" value="${t.nr}" onchange="updateVal('${id}', 'nr', this.value)" 
-                            class="edit-input text-2xl sm:text-4xl">
+                            <input type="text" value="${t.nr}" onchange="updateVal('${id}', 'nr', this.value)" class="edit-input text-2xl sm:text-4xl">
                         </td>
-                        
                         <td class="p-3 sm:p-5">
-                            <input type="text" value="${t.port}" onchange="updateVal('${id}', 'port', this.value)" 
-                            class="edit-input text-xl sm:text-3xl text-blue-600">
+                            <input type="text" value="${t.port}" onchange="updateVal('${id}', 'port', this.value)" class="edit-input text-xl sm:text-3xl text-blue-600">
                             <div class="sm:hidden mt-1"><span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'}">${t.typ}</span></div>
                         </td>
-
                         <td class="p-3 sm:p-5 hidden sm:table-cell">
                             <div class="flex flex-col gap-1">
                                 <span class="bg-slate-100 px-2 py-1 rounded text-[10px] font-black border uppercase w-max">${t.avd}</span>
                                 <span class="${t.typ==='In'?'badge-in':t.typ==='Ut'?'badge-ut':'badge-fixa'} w-max">${t.typ}</span>
                             </div>
                         </td>
-
                         <td class="p-3 sm:p-5 hidden sm:table-cell">
                             <select onchange="updateVal('${id}', 'status', this.value)" class="bg-white border p-1 rounded text-[10px] font-black mb-1 w-full">
                                 <option ${t.status==='Normal'?'selected':''}>Normal</option>
-                                <option ${t.status==='PRIO'?'selected':''}>PRIO</option>
-                                <option ${t.status==='Hittar ej'?'selected':''}>Hittar ej</option>
+                                <option ${t.status==='PRIO'?'selected':''}>PRIO 🔥</option>
+                                <option ${t.status==='Hittar ej'?'selected':''}>Hittar ej ❓</option>
                             </select>
-                            <input type="text" value="${t.notering||''}" onblur="updateVal('${id}', 'notering', this.value)" 
-                            placeholder="Skriv notering..." class="w-full text-xs italic border-b outline-none">
+                            <input type="text" value="${t.notering||''}" onblur="updateVal('${id}', 'notering', this.value)" placeholder="Notering..." class="w-full text-xs italic border-b outline-none">
                         </td>
-
                         <td class="p-3 sm:p-5 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button onclick="markDone('${id}')" class="bg-green-600 text-white font-black px-6 sm:px-10 py-3 sm:py-4 rounded-xl shadow-lg uppercase text-xs">KLAR</button>
-                                <button onclick="confirm('Radera?') && remove(ref(db, 'trailers/${id}'))" class="text-slate-200 ml-2">✕</button>
+                            <div class="flex items-center justify-center gap-2 sm:gap-4">
+                                <button onclick="markDone('${id}')" class="bg-green-600 text-white font-black px-6 sm:px-10 py-3 sm:py-4 rounded-xl shadow-lg uppercase text-xs active:scale-90 transition-transform">KLAR</button>
+                                <button onclick="deleteTrailer('${id}')" class="text-slate-200 hover:text-red-500 transition-colors p-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
                         </td>
                     </tr>`;
                 } else {
                     doneList.innerHTML += `
-                    <div class="flex justify-between items-center p-3 bg-white border rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center p-3 bg-white border rounded-2xl shadow-sm">
                         <div class="flex items-center gap-4">
-                            <div class="bg-excel-done px-3 py-1 rounded-lg font-black text-xl">${t.nr}</div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase">P${t.port} - KLART ${t.utford}</div>
+                            <div class="bg-excel-done px-3 py-1 rounded-lg font-black text-xl italic">${t.nr}</div>
+                            <div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">PORT ${t.port} - KLART ${t.utford}</div>
+                                ${t.notering ? `<div class="text-[9px] italic text-slate-500">${t.notering}</div>` : ''}
+                            </div>
                         </div>
-                        <button onclick="updateVal('${id}', 'klar', false)" class="text-slate-300">↺</button>
+                        <button onclick="updateVal('${id}', 'klar', false)" class="text-slate-300 hover:text-blue-500">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </button>
                     </div>`;
                 }
             });
