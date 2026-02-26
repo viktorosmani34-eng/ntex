@@ -3,142 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TUGG Lista - Master Pro 10k</title>
+    <title>TUGG Lista - Analytics Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; }
-        
-        /* High-Contrast Status Rows */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
         .row-prio { background-color: #fefce8 !important; border-left: 14px solid #eab308 !important; }
         .row-problem { background-color: #fff1f2 !important; border-left: 14px solid #e11d48 !important; }
-        
-        /* Ultra-Bold Badges */
-        .badge { font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 6px; font-size: 11px; }
-        .badge-in { background-color: #1e40af; color: white; }
-        .badge-ut { background-color: #166534; color: white; }
-        .badge-fixa { background-color: #92400e; color: white; }
-
-        /* Navigation & Active States */
-        .tab-active { background: white !important; color: #2563eb !important; border-top: 5px solid #2563eb !important; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
-        
-        /* Input Focus Glow */
-        .edit-input { background: transparent; border: 2px solid transparent; outline: none; width: 100%; font-weight: 900; text-transform: uppercase; border-radius: 8px; transition: all 0.2s; color: #000; }
-        .edit-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-        
-        .drag-handle { cursor: grab; color: #94a3b8; display: flex; align-items: center; justify-content: center; width: 40px; }
-        .drag-handle:active { cursor: grabbing; color: #2563eb; }
-
-        /* Overlay & Toasts */
+        .tab-active { background: white !important; color: #2563eb !important; border-top: 5px solid #2563eb !important; }
+        .edit-input { background: transparent; border: 2px solid transparent; outline: none; width: 100%; font-weight: 900; text-transform: uppercase; border-radius: 8px; color: #000; }
+        .edit-input:focus { border-color: #3b82f6; background: #fff; }
+        .drag-handle { cursor: grab; color: #94a3b8; width: 40px; display: flex; align-items: center; justify-content: center; }
         #loginOverlay { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        
-        #undoToast { 
-            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); 
-            z-index: 100; display: none; animation: popUp 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        @keyframes popUp { from { transform: translate(-50%, 100%) scale(0.9); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body class="antialiased min-h-screen pb-32">
 
-    <div id="undoToast" class="bg-black text-white px-8 py-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center gap-6 border border-slate-700">
-        <span class="font-black text-base uppercase tracking-tight">Klarat! 🚀</span>
-        <button id="undoBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-black text-sm uppercase transition-transform active:scale-90">Ångra ↺</button>
-    </div>
-
     <div id="loginOverlay">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm mx-4 text-center">
-            <div class="text-5xl mb-6">🚛</div>
-            <h2 class="text-3xl font-black mb-2 uppercase italic tracking-tighter text-slate-900">Tugg Lista</h2>
-            <p class="text-slate-400 text-xs font-bold mb-10 uppercase tracking-[0.2em]">Logistics Terminal v2.0</p>
-            <input id="passInput" type="password" placeholder="PASSWORD" class="w-full border-4 border-slate-100 p-5 rounded-2xl mb-5 text-center text-2xl font-black outline-none focus:border-blue-600 transition-all">
-            <button onclick="checkLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl uppercase shadow-xl shadow-blue-200 transition-all active:scale-95">Enter System</button>
+            <h2 class="text-3xl font-black mb-10 uppercase italic tracking-tighter">Tugg Lista</h2>
+            <input id="passInput" type="password" placeholder="LÖSENORD" class="w-full border-4 border-slate-100 p-5 rounded-2xl mb-5 text-center text-2xl font-black outline-none focus:border-blue-600">
+            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase shadow-xl active:scale-95 transition-all">Logga in</button>
         </div>
     </div>
 
     <div id="mainContent" class="hidden">
         <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-xl">
-            <div class="max-w-6xl mx-auto px-4 py-5 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">⚡</span>
-                    <h1 class="text-xl font-black uppercase italic tracking-tighter">TUGG LISTA <span class="text-blue-500">PRO</span></h1>
-                </div>
-                <button onclick="logout()" class="text-[10px] bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg font-black uppercase tracking-widest hover:bg-red-900 transition-colors">Log Out</button>
+            <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 class="text-xl font-black uppercase italic">TUGG <span class="text-blue-500">PRO</span></h1>
+                <button onclick="logout()" class="text-[10px] opacity-50 font-bold uppercase tracking-widest">Logga ut</button>
             </div>
         </header>
 
         <div class="max-w-6xl mx-auto px-2 pt-6">
             
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border-2 border-slate-200 mb-8 mx-2">
+            <div id="inputSection" class="bg-white p-6 rounded-[2rem] shadow-sm border-2 border-slate-200 mb-8 mx-2">
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-5 items-end">
-                    <div class="col-span-1">
-                        <label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Trailer Nr</label>
-                        <input id="trailerNr" type="text" placeholder="XXXX" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black text-xl outline-none focus:border-blue-500 focus:bg-white transition-all uppercase">
-                    </div>
-                    <div class="col-span-1">
-                        <label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Port</label>
-                        <input id="portNr" type="text" placeholder="--" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black text-xl outline-none focus:border-blue-500 focus:bg-white transition-all text-center">
-                    </div>
-                    <div class="hidden sm:block">
-                        <label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Avdelning</label>
-                        <select id="deptSelect" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black outline-none focus:border-blue-500 appearance-none">
-                            <option>Imp</option><option>Exp</option><option>Secu</option><option>Mattor</option><option>Xylem</option><option>Annat</option>
-                        </select>
-                    </div>
-                    <div class="hidden sm:block">
-                        <label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Typ</label>
-                        <select id="typSelect" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black outline-none focus:border-blue-500 appearance-none">
-                            <option>In</option><option>Ut</option><option>Fixa</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2 sm:col-span-1">
-                       <button id="addBtn" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:bg-blue-600 transition-all active:scale-95">Skapa Uppdrag</button>
-                    </div>
+                    <div><label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Trailer</label>
+                    <input id="trailerNr" type="text" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black text-xl outline-none focus:border-blue-600 uppercase"></div>
+                    <div><label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Port</label>
+                    <input id="portNr" type="text" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black text-xl outline-none focus:border-blue-600 text-center"></div>
+                    <div class="hidden sm:block"><label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Avd</label>
+                    <select id="deptSelect" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black outline-none"><option>Imp</option><option>Exp</option><option>Secu</option><option>Mattor</option><option>Xylem</option><option>Annat</option></select></div>
+                    <div class="hidden sm:block"><label class="block text-[10px] font-black text-slate-500 mb-2 uppercase ml-1">Typ</label>
+                    <select id="typSelect" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black outline-none"><option>In</option><option>Ut</option><option>Fixa</option></select></div>
+                    <button id="addBtn" class="col-span-2 sm:col-span-1 bg-blue-600 text-white font-black py-5 rounded-2xl uppercase text-xs shadow-lg active:scale-95 transition-all">Skapa</button>
                 </div>
             </div>
 
             <div id="dailyView">
-                <div class="bg-white rounded-[2.5rem] shadow-2xl border-2 border-slate-200 overflow-hidden mb-12 mx-2">
+                <div class="bg-white rounded-[2.5rem] shadow-xl border-2 border-slate-200 overflow-hidden mb-8 mx-2">
                     <div class="bg-slate-50 px-6 py-4 border-b-2 border-slate-200 flex justify-between items-center">
-                        <h2 class="text-slate-900 font-black uppercase italic tracking-tighter flex items-center gap-2">
-                            <span class="text-blue-600">●</span> <span id="currentTabLabel">Måndag</span>
-                        </h2>
-                        <span id="activeCount" class="bg-black text-white text-[10px] px-4 py-1.5 rounded-full font-black tracking-widest">0 AKTIVA</span>
+                        <h2 class="text-slate-900 font-black uppercase italic tracking-tighter"><span id="currentTabLabel">Måndag</span></h2>
+                        <span id="activeCount" class="bg-black text-white text-[10px] px-4 py-1.5 rounded-full font-black uppercase">0 AKTIVA</span>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-white text-[11px] uppercase text-slate-400 font-black border-b">
-                                <tr>
-                                    <th class="p-4 w-12 text-center">#</th>
-                                    <th class="p-4 text-left">Trailer</th>
-                                    <th class="p-4 text-left">Port</th>
-                                    <th class="p-4 text-left">Kategori</th>
-                                    <th class="p-4 text-left">Status / Notering</th>
-                                    <th class="p-4 text-center">Åtgärd</th>
-                                </tr>
-                            </thead>
-                            <tbody id="activeTable" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
+                    <table class="w-full"><tbody id="activeTable" class="divide-y divide-slate-100"></tbody></table>
                 </div>
 
                 <div class="px-4">
-                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <hr class="flex-grow border-slate-300"> AVKLARADE IDAG <hr class="flex-grow border-slate-300">
-                    </h3>
-                    <div id="doneList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">AVKLARADE</h3>
+                        <button onclick="clearDayDone()" class="text-[10px] bg-red-50 text-red-600 px-3 py-1 rounded-lg font-black uppercase border border-red-100 hover:bg-red-600 hover:text-white transition-all">Rensa avklarade</button>
+                    </div>
+                    <div id="doneList" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10"></div>
                 </div>
             </div>
+
+            <div id="statsView" class="hidden px-2">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-2xl font-black uppercase italic">Veckostatistik</h2>
+                    <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-black" id="weekDisplay">v. --</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                    <div class="stat-card">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Medeltid per uppdrag</p>
+                        <h4 class="text-3xl font-black text-blue-600" id="avgTimeText">0 min</h4>
+                    </div>
+                    <div class="stat-card">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">PRIO-tryck / dag</p>
+                        <h4 class="text-3xl font-black text-amber-500" id="avgPrioText">0 st</h4>
+                    </div>
+                </div>
+                <div class="stat-card mb-10">
+                    <canvas id="statsChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <footer class="text-center py-10">
+                <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Made with ❤️ from Viktor</p>
+            </footer>
         </div>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t-2 border-slate-200 flex z-50 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-            <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab flex-1 py-6 font-black text-xs uppercase text-slate-400 transition-all">Mån</button>
-            <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab flex-1 py-6 font-black text-xs uppercase text-slate-400 transition-all">Tis</button>
-            <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab flex-1 py-6 font-black text-xs uppercase text-slate-400 transition-all">Ons</button>
-            <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab flex-1 py-6 font-black text-xs uppercase text-slate-400 transition-all">Tor</button>
-            <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab flex-1 py-6 font-black text-xs uppercase text-slate-400 transition-all">Fre</button>
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 flex z-50 shadow-2xl">
+            <button onclick="switchTab('Måndag')" id="tab-Måndag" class="nav-tab flex-1 py-5 font-black text-[10px] uppercase text-slate-400">Mån</button>
+            <button onclick="switchTab('Tisdag')" id="tab-Tisdag" class="nav-tab flex-1 py-5 font-black text-[10px] uppercase text-slate-400">Tis</button>
+            <button onclick="switchTab('Onsdag')" id="tab-Onsdag" class="nav-tab flex-1 py-5 font-black text-[10px] uppercase text-slate-400">Ons</button>
+            <button onclick="switchTab('Torsdag')" id="tab-Torsdag" class="nav-tab flex-1 py-5 font-black text-[10px] uppercase text-slate-400">Tor</button>
+            <button onclick="switchTab('Fredag')" id="tab-Fredag" class="nav-tab flex-1 py-5 font-black text-[10px] uppercase text-slate-400">Fre</button>
+            <button onclick="switchTab('Statistik')" id="tab-Statistik" class="nav-tab flex-1 py-5 font-black text-[10px] uppercase text-blue-400 bg-blue-50/50">Statistik</button>
         </nav>
     </div>
 
@@ -160,92 +125,68 @@
         const db = getDatabase(app);
         const trailersRef = ref(db, 'trailers');
         let allTrailers = {};
-        let undoTimer = null;
-        let lastFinishedId = null;
+        let myChart = null;
 
         window.checkLogin = () => {
-            const pass = document.getElementById('passInput').value.toLowerCase();
-            if(pass === "tugglista" || pass === "tuglista") {
+            if(document.getElementById('passInput').value.toLowerCase() === "tugglista") {
                 localStorage.setItem('logistikLoginTime', Date.now());
                 showApp();
-            } else {
-                alert("ACCESS DENIED");
             }
         };
-
-        document.getElementById('passInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkLogin(); });
-
-        function showApp() {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-        }
-
-        window.logout = () => { localStorage.removeItem('logistikLoginTime'); location.reload(); };
         if (localStorage.getItem('logistikLoginTime')) showApp();
+        function showApp() { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainContent').style.display = 'block'; }
+        window.logout = () => { localStorage.removeItem('logistikLoginTime'); location.reload(); };
 
         window.currentDay = 'Måndag';
-        window.switchTab = (tab) => { window.currentDay = tab; renderAll(); };
+        window.switchTab = (tab) => { 
+            window.currentDay = tab; 
+            document.getElementById('dailyView').style.display = (tab === 'Statistik') ? 'none' : 'block';
+            document.getElementById('inputSection').style.display = (tab === 'Statistik') ? 'none' : 'block';
+            document.getElementById('statsView').style.display = (tab === 'Statistik') ? 'block' : 'none';
+            renderAll(); 
+        };
 
-        document.getElementById('addBtn').onclick = createTrailer;
-        document.getElementById('portNr').addEventListener('keypress', (e) => { if(e.key === 'Enter') createTrailer(); });
-
-        function createTrailer() {
+        document.getElementById('addBtn').onclick = () => {
             const nr = document.getElementById('trailerNr').value.trim();
             const port = document.getElementById('portNr').value.trim();
             if (!nr) return;
             push(trailersRef, {
-                nr, port, 
-                typ: document.getElementById('typSelect').value,
+                nr, port, typ: document.getElementById('typSelect').value,
                 avd: document.getElementById('deptSelect').value,
-                dag: window.currentDay, 
-                status: "Normal", 
-                notering: "",
-                klar: false, 
-                timestamp: Date.now(),
-                order: Date.now()
+                dag: window.currentDay, status: "Normal", klar: false, 
+                timestamp: Date.now(), order: Date.now()
             });
             document.getElementById('trailerNr').value = ""; document.getElementById('portNr').value = "";
-            document.getElementById('trailerNr').focus();
-        }
+        };
 
         window.updateVal = (id, field, val) => update(ref(db, `trailers/${id}`), { [field]: val });
-
+        
         window.markDone = (id) => {
             update(ref(db, `trailers/${id}`), { 
                 klar: true, 
+                doneTimestamp: Date.now(),
                 utford: new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}) 
             });
-            lastFinishedId = id;
-            const toast = document.getElementById('undoToast');
-            toast.style.display = 'flex';
-            clearTimeout(undoTimer);
-            undoTimer = setTimeout(() => toast.style.display = 'none', 5000);
         };
 
-        document.getElementById('undoBtn').onclick = () => {
-            if(lastFinishedId) {
-                update(ref(db, `trailers/${lastFinishedId}`), { klar: false });
-                document.getElementById('undoToast').style.display = 'none';
-            }
-        };
-
-        window.deleteTrailer = (id) => {
-            if(confirm("RADERA UPPDRAGET PERMANENT?")) remove(ref(db, `trailers/${id}`));
-        };
-
-        const el = document.getElementById('activeTable');
-        Sortable.create(el, {
-            handle: '.drag-handle',
-            animation: 200,
-            ghostClass: 'sortable-ghost',
-            onEnd: function() {
-                el.querySelectorAll('tr').forEach((row, index) => {
-                    update(ref(db, `trailers/${row.getAttribute('data-id')}`), { order: index });
+        window.clearDayDone = () => {
+            if(confirm(`Vill du rensa ALLA avklarade uppdrag för ${window.currentDay}?`)) {
+                Object.keys(allTrailers).forEach(id => {
+                    if(allTrailers[id].dag === window.currentDay && allTrailers[id].klar) {
+                        remove(ref(db, `trailers/${id}`));
+                    }
                 });
             }
-        });
+        };
 
         onValue(trailersRef, (snapshot) => { allTrailers = snapshot.val() || {}; renderAll(); });
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
 
         function renderAll() {
             const activeTable = document.getElementById('activeTable');
@@ -256,67 +197,82 @@
             document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('tab-active'));
             document.getElementById('tab-' + window.currentDay).classList.add('tab-active');
 
-            const sortedIds = Object.keys(allTrailers).sort((a,b) => {
-                const tA = allTrailers[a], tB = allTrailers[b];
-                const prioA = tA.status === 'PRIO' ? 1 : 0, prioB = tB.status === 'PRIO' ? 1 : 0;
-                if (prioA !== prioB) return prioB - prioA;
-                return (tA.order || tA.timestamp) - (tB.order || tB.timestamp);
-            });
+            if(window.currentDay === 'Statistik') {
+                renderStats();
+                return;
+            }
 
-            sortedIds.forEach(id => {
+            Object.keys(allTrailers).sort((a,b) => (allTrailers[a].order || 0) - (allTrailers[b].order || 0)).forEach(id => {
                 const t = allTrailers[id];
                 if (t.dag !== window.currentDay) return;
-
                 if (!t.klar) {
                     aCount++;
                     const rowClass = t.status === 'PRIO' ? 'row-prio' : (t.status === 'Hittar ej' ? 'row-problem' : '');
-                    const badgeClass = t.typ === 'In' ? 'badge-in' : (t.typ === 'Ut' ? 'badge-ut' : 'badge-fixa');
-
-                    activeTable.innerHTML += `
-                    <tr class="${rowClass} border-b border-slate-100 transition-all hover:bg-slate-50" data-id="${id}">
-                        <td class="drag-handle p-4">
-                            <svg class="w-6 h-6 opacity-30" fill="currentColor" viewBox="0 0 20 20"><path d="M7 7h2v2H7V7zm0 4h2v2H7v-2zm4-4h2v2h-2V7zm0 4h2v2h-2v-2zM7 3h2v2H7V3zm4 0h2v2h-2V3zm-4 12h2v2H7v-2zm4 0h2v2h-2v-2z"/></svg>
-                        </td>
-                        <td class="p-4"><input type="text" value="${t.nr}" onchange="updateVal('${id}', 'nr', this.value)" class="edit-input text-2xl sm:text-5xl font-black italic"></td>
-                        <td class="p-4"><input type="text" value="${t.port}" onchange="updateVal('${id}', 'port', this.value)" class="edit-input text-2xl sm:text-4xl text-blue-600 font-black"></td>
-                        <td class="p-4">
-                             <div class="flex flex-col gap-2 items-start">
-                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">${t.avd}</span>
-                                <span class="badge ${badgeClass}">${t.typ}</span>
-                             </div>
-                        </td>
-                        <td class="p-4">
-                            <select onchange="updateVal('${id}', 'status', this.value)" class="w-full bg-white border-2 border-slate-200 text-xs font-black p-2 rounded-lg mb-2 outline-none focus:border-blue-500 shadow-sm">
-                                <option value="Normal" ${t.status==='Normal'?'selected':''}>NORMAL</option>
-                                <option value="PRIO" ${t.status==='PRIO'?'selected':''}>PRIO 🔥</option>
-                                <option value="Hittar ej" ${t.status==='Hittar ej'?'selected':''}>HITTAR EJ ❓</option>
-                            </select>
-                            <input type="text" value="${t.notering||''}" onblur="updateVal('${id}', 'notering', this.value)" placeholder="Notering..." class="w-full text-xs italic font-bold text-slate-500 border-b-2 border-slate-100 bg-transparent outline-none focus:border-blue-300">
-                        </td>
-                        <td class="p-4 text-center">
-                            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-                                <button onclick="markDone('${id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-4 rounded-2xl text-xs uppercase shadow-lg shadow-emerald-100 transition-all active:scale-90 w-full sm:w-auto">KLAR</button>
-                                <button onclick="deleteTrailer('${id}')" class="text-slate-300 hover:text-red-600 transition-colors p-2 text-2xl">✕</button>
-                            </div>
-                        </td>
+                    activeTable.innerHTML += `<tr class="${rowClass} border-b" data-id="${id}">
+                        <td class="drag-handle"><svg class="w-6 h-6 opacity-20" fill="currentColor" viewBox="0 0 20 20"><path d="M7 7h2v2H7V7zm0 4h2v2H7v-2zm4-4h2v2h-2V7zm0 4h2v2h-2v-2zM7 3h2v2H7V3zm4 0h2v2h-2V3zm-4 12h2v2H7v-2zm4 0h2v2h-2v-2z"/></svg></td>
+                        <td class="p-4"><input type="text" value="${t.nr}" onchange="updateVal('${id}', 'nr', this.value)" class="edit-input text-2xl sm:text-4xl font-black italic"></td>
+                        <td class="p-4"><input type="text" value="${t.port}" onchange="updateVal('${id}', 'port', this.value)" class="edit-input text-2xl text-blue-600 font-black"></td>
+                        <td class="p-4"><select onchange="updateVal('${id}', 'status', this.value)" class="bg-white border p-2 rounded font-black text-[10px] uppercase shadow-sm">
+                            <option value="Normal" ${t.status==='Normal'?'selected':''}>NORMAL</option>
+                            <option value="PRIO" ${t.status==='PRIO'?'selected':''}>PRIO 🔥</option>
+                            <option value="Hittar ej" ${t.status==='Hittar ej'?'selected':''}>HITTAR EJ ❓</option>
+                        </select></td>
+                        <td class="p-4 text-center"><button onclick="markDone('${id}')" class="bg-emerald-600 text-white font-black px-6 py-4 rounded-2xl text-xs active:scale-90">KLAR</button></td>
                     </tr>`;
                 } else {
-                    doneList.innerHTML += `
-                    <div class="flex justify-between items-center p-5 bg-white border-2 border-slate-200 rounded-[1.5rem] shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <span class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-black text-base italic uppercase">${t.nr}</span>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">PORT ${t.port}</span>
-                                <span class="text-[10px] font-bold text-emerald-600">KLART ${t.utford}</span>
-                            </div>
-                        </div>
-                        <button onclick="updateVal('${id}', 'klar', false)" class="text-blue-600 font-black text-xs uppercase hover:underline transition-all">Ångra ↺</button>
+                    doneList.innerHTML += `<div class="flex justify-between items-center p-4 bg-white border-2 rounded-2xl opacity-60">
+                        <span class="font-black italic">${t.nr} - PORT ${t.port}</span>
+                        <span class="text-[10px] font-bold text-emerald-600">${t.utford}</span>
                     </div>`;
                 }
             });
             document.getElementById('activeCount').innerText = aCount + " AKTIVA";
             document.getElementById('currentTabLabel').innerText = window.currentDay;
         }
+
+        function renderStats() {
+            const week = getWeekNumber(new Date());
+            document.getElementById('weekDisplay').innerText = `v. ${week}`;
+            
+            let totalTime = 0;
+            let doneCount = 0;
+            let prioCount = 0;
+            const dailyData = { 'Måndag': 0, 'Tisdag': 0, 'Onsdag': 0, 'Torsdag': 0, 'Fredag': 0 };
+
+            Object.values(allTrailers).forEach(t => {
+                if(t.klar && t.doneTimestamp && t.timestamp) {
+                    totalTime += (t.doneTimestamp - t.timestamp);
+                    doneCount++;
+                    dailyData[t.dag]++;
+                }
+                if(t.status === 'PRIO') prioCount++;
+            });
+
+            const avgMinutes = doneCount > 0 ? Math.round((totalTime / doneCount) / 60000) : 0;
+            document.getElementById('avgTimeText').innerText = `${avgMinutes} min`;
+            document.getElementById('avgPrioText').innerText = `${(prioCount / 5).toFixed(1)} / dag`;
+
+            if (myChart) myChart.destroy();
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(dailyData),
+                    datasets: [{
+                        label: 'Avklarade Trailers',
+                        data: Object.values(dailyData),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 10
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        const el = document.getElementById('activeTable');
+        Sortable.create(el, { handle: '.drag-handle', animation: 150, onEnd: () => {
+            el.querySelectorAll('tr').forEach((row, index) => update(ref(db, `trailers/${row.getAttribute('data-id')}`), { order: index }));
+        }});
     </script>
 </body>
 </html>
